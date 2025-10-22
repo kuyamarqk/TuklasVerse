@@ -1,0 +1,39 @@
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+import Header from "@/component/Header";
+import Footer from "@/component/Footer";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+export const metadata: Metadata = {
+  title: "TuklasVerse",
+  description: "Discover your next addiction",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} bg-[#1a1a1a] text-[#FBE9E7] antialiased`}
+      >
+        <Header />
+        {children}
+        <Footer />
+      </body>
+    </html>
+  );
+}
