@@ -52,8 +52,8 @@ const AboutMePage: React.FC = () => {
             <hr className="my-6 border-gray-300" />
             
             <p className="text-sm italic text-gray-700 text-center">
-              "Tuklas" means "discover" in Filipino. My mission is to help you discover your next obsession!
-            </p>
+  &quot;Tuklas&quot; means &quot;discover&quot; in Filipino. My mission is to help you discover your next obsession!
+</p>
           </div>
         </aside>
 
@@ -67,8 +67,8 @@ const AboutMePage: React.FC = () => {
               TuklasVerse was born out of a genuine passion for storytelling, focusing currently on the **cinematic grandeur of Movies and the intricate narratives of TV Series**. This platform is a personal curated space, a digital haven where fellow enthusiasts can dive deep into reviews, discussions, and organized content for the best in global cinema and television.
             </p>
             <p className="leading-relaxed">
-              Every recommendation and review is designed to help you decide what to watch next. While we're currently focused on movies and TV, we plan to expand our "Verse" to include **Anime and Manga** in the near future!
-            </p>
+  Every recommendation and review is designed to help you decide what to watch next. While we&apos;re currently focused on movies and TV, we plan to expand our &quot;Verse&quot; to include Anime and Manga in the near future!
+</p>
           </section>
 
           {/* Section 2: Our Mission (Tuklas = Discover) */}

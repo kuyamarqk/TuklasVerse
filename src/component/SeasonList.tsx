@@ -1,9 +1,25 @@
+// src/app/tv/[id]/SeasonList.tsx (Corrected)
 'use client';
 
 import { useState } from 'react';
 import Image from 'next/image';
 import { getTmdbImageUrl } from '@/lib/tmdb-api';
 import VideoPlayer from './VideoPlayer';
+
+// ====================================================================
+// ⭐ NEW: Type Definitions for Episodes
+// ====================================================================
+
+interface Episode {
+  id: number;
+  episode_number: number;
+  name: string;
+  overview: string;
+  still_path: string | null;
+  // Add any other properties your component uses from the episode object
+}
+
+// ----------------------------------------------------------------------
 
 export default function SeasonList({
   seasons,
@@ -17,9 +33,14 @@ export default function SeasonList({
     poster_path: string | null;
   }[];
   tvId: number;
+  // NOTE: If you had an onSelectEpisode prop, it would be added here:
+  // onSelectEpisode: (data: { season: number; episode: number } | null) => void;
 }) {
   const [expandedSeason, setExpandedSeason] = useState<number | null>(null);
-  const [episodes, setEpisodes] = useState<Record<number, any[]>>({});
+  
+  // ⭐ FIX LINE 22: Replace any[] with Episode[]
+  const [episodes, setEpisodes] = useState<Record<number, Episode[]>>({}); 
+  
   const [activeEpisode, setActiveEpisode] = useState<{ season: number; episode: number } | null>(null);
 
   const handleToggle = async (seasonNumber: number) => {
@@ -29,7 +50,8 @@ export default function SeasonList({
     }
 
     if (!episodes[seasonNumber]) {
-      const data = await fetch(`/api/season/${tvId}/${seasonNumber}`).then(res => res.json());
+      // NOTE: Assuming your API route returns an object like { episodes: [Episode, ...] }
+      const data: { episodes: Episode[] } = await fetch(`/api/season/${tvId}/${seasonNumber}`).then(res => res.json());
       setEpisodes((prev) => ({ ...prev, [seasonNumber]: data.episodes }));
     }
 
@@ -66,7 +88,8 @@ export default function SeasonList({
           {/* Episode List */}
           {expandedSeason === season.season_number && episodes[season.season_number] && (
             <ul className="mt-4 space-y-4 text-sm text-[#FBE9E7]">
-              {episodes[season.season_number].map((ep: any) => (
+              {/* ⭐ FIX LINE 69: Removed : any, now implicitly typed as Episode */}
+              {episodes[season.season_number].map((ep) => (
                 <li key={ep.id} className="border-b border-[#333] pb-4">
                   <div className="flex gap-4 items-start">
                     {ep.still_path && (

@@ -21,7 +21,7 @@ const TermsOfServicePage: React.FC = () => {
         <section>
           <h2 className="text-2xl font-semibold mb-3 border-b-2 border-[#2196F3] pb-1">1. Acceptance of Terms</h2>
           <p className="leading-relaxed">
-            By accessing or using TuklasVerse.com ("the Service"), you agree to be bound by these Terms of Service ("Terms") and our Privacy Policy. If you disagree with any part of the terms, then you may not access the Service.
+            By accessing or using TuklasVerse.com (&quot;the Service&quot;), you agree to be bound by these Terms of Service (&quot;Terms&quot;) and our Privacy Policy. If you disagree with any part of the terms, then you may not access the Service.
           </p>
         </section>
 
@@ -54,8 +54,8 @@ const TermsOfServicePage: React.FC = () => {
         {/* 4. Disclaimers */}
         <section>
           <h2 className="text-2xl font-semibold mb-3 border-b-2 border-[#2196F3] pb-1">4. Disclaimers</h2>
-          <p className="leading-relaxed">
-            The Service is provided on an "AS IS" and "AS AVAILABLE" basis. TuklasVerse makes no warranties, expressed or implied, regarding the operation or availability of the Service.
+         <p className="leading-relaxed">
+            The Service is provided on an &quot;AS IS&quot; and &quot;AS AVAILABLE&quot; basis. TuklasVerse makes no warranties, expressed or implied, regarding the operation or availability of the Service.
           </p>
         </section>
 

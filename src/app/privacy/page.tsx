@@ -24,9 +24,9 @@ const PrivacyPolicyPage: React.FC = () => {
           <p className="leading-relaxed">
             Welcome to TuklasVerse. We are committed to protecting your personal information and your right to privacy. If you have any questions or concerns about our policy, or our practices with regards to your personal information, please contact us at **contact@tuklasverse.com**.
           </p>
-          <p className="leading-relaxed mt-2">
-            This privacy policy applies to all information collected through our website (TuklasVerse.com), and/or any related services, sales, marketing or events (we refer to them collectively in this privacy policy as the "Services").
-          </p>
+          <p className="leading-relaxed">
+  By accessing or using TuklasVerse.com (&quot;the Service&quot;), you agree to be bound by these Terms of Service (&quot;Terms&quot;) and our Privacy Policy. If you disagree with any part of the terms, then you may not access the Service.
+</p>
         </section>
 
         {/* 1. Information We Collect */}
