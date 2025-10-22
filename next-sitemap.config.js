@@ -1,3 +1,5 @@
+// next-sitemap.config.js
+
 const config = {
   siteUrl: process.env.SITE_URL || 'https://www.tuklasverse.com',
   generateRobotsTxt: true,
