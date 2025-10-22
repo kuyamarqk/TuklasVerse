@@ -2,13 +2,14 @@
 
 import { useState } from 'react';
 import ContentCard from '@/component/ContentCard';
+import { ContentCardType } from '@/src/types'; // ✅ Import the correct type
 
 export default function MovieGrid({
   popular,
   trending,
 }: {
-  popular: MovieType[];
-  trending: MovieType[];
+  popular: ContentCardType[]; // ✅ Use ContentCardType
+  trending: ContentCardType[];
 }) {
   const [filter, setFilter] = useState<'popular' | 'trending'>('popular');
   const movies = filter === 'popular' ? popular : trending;

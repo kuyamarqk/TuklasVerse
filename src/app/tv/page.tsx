@@ -1,8 +1,7 @@
+// src/app/tv-series/page.tsx (This is the file you originally provided, now refactored)
+
 import Hero from '@/component/Hero';
-import Section from '@/component/Section';
-import FilterWrapper from '@/component/FilterWrapper';
-import MovieGrid from '@/component/MovieGrid';
-import PaginationWrapper from '@/component/Pagination';
+import TvSeriesClient from './tvSeriesClient';
 
 import {
   getHeroBackdrop,
@@ -10,22 +9,24 @@ import {
   getPopularTvSeries,
   getTmdbTvGenres,
 } from '@/lib/tmdb-api';
-import { mapTv } from '@/lib/map-content';
+// We no longer need mapTv here, as it's done in the client component,
+// but we keep the type imports if mapTv is defined in a separate file.
 
 export default async function TvSeries() {
-  const page = 1;
+  const page = 1; // Initial page is always 1 for the server
 
-  const hero = await getHeroBackdrop('tv'); 
+  // Fetch all data on the server
+  const hero = await getHeroBackdrop('tv');
   const trendingRaw = await getTrendingTvSeries('day', page);
   const popularRaw = await getPopularTvSeries(page);
   const genresData = await getTmdbTvGenres();
-
-  const trendingTV = mapTv(trendingRaw.results);
-  const popularTV = mapTv(popularRaw.results);
-  const totalPages = Math.max(trendingRaw.total_pages, popularRaw.total_pages);
-
+  
+  // No need to map the data here; pass raw data (or map it in the client component)
+  const initialTotalPages = Math.max(trendingRaw.total_pages, popularRaw.total_pages);
+  
   return (
     <main className="font-sans bg-[#121212] text-[#FBE9E7] min-h-screen">
+      {/* 1. Hero is Static/Server-Rendered */}
       <Hero
         backdropUrl={hero.backdropUrl}
         title={hero.title}
@@ -34,14 +35,13 @@ export default async function TvSeries() {
         type={hero.type}
       />
 
-      <div className="mt-6">
-        <FilterWrapper genres={genresData.genres} />
-      </div>
-
-      <Section title="Browse TV Series" >
-        <MovieGrid popular={popularTV} trending={trendingTV} />
-        <PaginationWrapper currentPage={page} totalPages={totalPages} />
-      </Section>
+      {/* 2. Pass all fetched data as props to the client component */}
+      <TvSeriesClient
+        initialTrending={trendingRaw.results}
+        initialPopular={popularRaw.results}
+        initialTotalPages={initialTotalPages}
+        genres={genresData.genres}
+      />
     </main>
   );
 }

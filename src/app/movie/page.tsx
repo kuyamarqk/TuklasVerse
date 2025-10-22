@@ -3,7 +3,7 @@ import Hero from '@/component/Hero';
 import Section from '@/component/Section';
 import FilterWrapper from '@/component/FilterWrapper';
 import MovieGrid from '@/component/MovieGrid';
-import PaginationWrapper from '@/component/Pagination';
+import PaginationWrapper from '@/component/PaginationWrapper';
 
 import {
   getHeroBackdrop,
@@ -12,6 +12,7 @@ import {
   getTmdbMovieGenres,
 } from '@/lib/tmdb-api';
 import { mapMovies } from '@/lib/map-content';
+
 
 interface PageProps {
   searchParams: { page?: string };
@@ -43,7 +44,14 @@ export default async function Movie({ searchParams }: PageProps) {
       />
 
       <div className="mt-6">
-        <FilterWrapper genres={genresData.genres} />
+        <FilterWrapper
+  genres={genresData.genres}
+  onGenreChange={(genre) => {
+    // Handle genre change here
+    console.log('Selected genre:', genre);
+    // You can also update state or trigger a search
+  }}
+/>
       </div>
 
       <Section title="Browse Movies">

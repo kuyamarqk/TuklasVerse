@@ -1,43 +1,40 @@
-// src/app/tv/[id]/TvClient.tsx
 'use client';
 
 import { useState } from 'react';
 import Section from '@/component/Section';
-import VideoPlayer from '@/component/VideoPlayer';
-import SeasonList from '@/component/SeasonList';
 import ContentCard from '@/component/ContentCard';
+import SeasonList from '@/component/SeasonList';
 import { getTmdbImageUrl } from '@/lib/tmdb-api';
+import VideoPlayer from '@/component/VideoPlayer';
 
 // ====================================================================
-// ⭐ NEW: Type Definitions for Props
+// Type Definitions
 // ====================================================================
 
-// 1. Interface for the main TV Show Details object (from the 'tv' prop)
 interface TvDetails {
   id: number;
   name: string;
   first_air_date: string;
-  episode_run_time?: number[]; // Optional array of run times
+  episode_run_time?: number[];
   overview: string;
   genres?: { id: number; name: string }[];
   seasons: {
-    id: number;
     season_number: number;
-    // Add other season properties if needed
+    name: string;
+    episode_count: number;
+    overview: string;
+    poster_path: string | null;
   }[];
-  // Add other properties used in your component (like poster_path, etc.)
 }
 
-// 2. Interface for a single Related TV Show item
 interface RelatedTvItem {
   id: number;
-  name: string; // TMDB uses 'name' for TV series titles
+  name: string;
   poster_path: string | null;
   first_air_date: string;
   overview: string;
 }
 
-// 3. Interface for the entire Related TV Series API response
 interface RelatedTvResponse {
   page: number;
   results: RelatedTvItem[];
@@ -46,35 +43,20 @@ interface RelatedTvResponse {
 }
 
 // ====================================================================
-// ⭐ UPDATED: Component Props and Mapping Function
+// Component
 // ====================================================================
 
 export default function TvClient({
-  tv, // ⭐ Replaced 'any' with TvDetails
-  related, // ⭐ Replaced 'any' with RelatedTvResponse
+  tv,
+  related,
 }: {
   tv: TvDetails;
   related: RelatedTvResponse;
 }) {
-  const [selectedEpisode, setSelectedEpisode] = useState<{
-    season: number;
-    episode: number;
-  } | null>(null);
+  const [selectedEpisode, setSelectedEpisode] = useState<{ season: number; episode: number } | null>(null);
 
   return (
-    <main className="font-sans bg-[#121212] text-[#FBE9E7] min-h-screen px-4 sm:px-8 py-8">
-      {/* Central Video Player */}
-      <Section title="Watch Now">
-        <div className="w-full aspect-video rounded-md overflow-hidden bg-[#1a1a1a]">
-          <VideoPlayer
-            id={tv.id}
-            type="tv"
-            season={selectedEpisode?.season}
-            episode={selectedEpisode?.episode}
-          />
-        </div>
-      </Section>
-
+    <main className="relative font-sans bg-[#121212] text-[#FBE9E7] min-h-screen px-4 sm:px-8 py-8">
       {/* Series Details */}
       <Section title="Series Details">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -84,8 +66,7 @@ export default function TvClient({
               {tv.first_air_date?.slice(0, 4)} • {tv.episode_run_time?.[0] ?? 'N/A'} min/ep
             </p>
             <div className="flex flex-wrap gap-2">
-              {/* Type assertion is no longer needed here, but kept for safety */}
-              {tv.genres?.map((genre: { id: number; name: string }) => (
+              {tv.genres?.map((genre) => (
                 <span
                   key={genre.id}
                   className="px-3 py-1 rounded-full bg-[#1a1a1a] text-sm border border-[#333]"
@@ -105,28 +86,60 @@ export default function TvClient({
 
       {/* Seasons */}
       <Section title="Seasons">
-        <SeasonList seasons={tv.seasons} tvId={tv.id} onSelectEpisode={setSelectedEpisode} />
+        <SeasonList
+          seasons={tv.seasons}
+          tvId={tv.id}
+          onSelectEpisode={setSelectedEpisode}
+        />
       </Section>
 
       {/* Related TV Series */}
       <Section title="Related TV Series" href="/tv-series?filter=popular">
         <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-4">
-          {/* ⭐ FIX APPLIED: Removed ': any' - 'item' is now implicitly RelatedTvItem */}
-          {related.results?.slice(0, 10).map((item) => (
-            <ContentCard
-              key={item.id}
-              card={{
-                id: item.id,
-                title: item.name, // Use 'name' for TV series
-                posterUrl: getTmdbImageUrl(item.poster_path),
-                releaseDate: item.first_air_date,
-                overview: item.overview,
-                type: 'tv',
-              }}
-            />
-          ))}
+          {related.results?.slice(0, 10).map((item) => {
+            const posterUrl = getTmdbImageUrl(item.poster_path);
+            return (
+              <ContentCard
+                key={item.id}
+                card={{
+                  id: item.id,
+                  title: item.name ?? 'Untitled',
+                  posterUrl,
+                  imageUrl: posterUrl,
+                  releaseDate: item.first_air_date ?? 'N/A',
+                  overview: item.overview ?? '',
+                  genre: 'Unknown',
+                  year: item.first_air_date?.slice(0, 4) ?? 'N/A',
+                  type: 'tv',
+                }}
+              />
+            );
+          })}
         </div>
       </Section>
+
+      {/* Floating Mini Player */}
+      {selectedEpisode && (
+        <div className="fixed bottom-4 right-4 bg-[#1a1a1a] border border-[#333] rounded-xl shadow-lg overflow-hidden w-[360px] sm:w-[420px]">
+          <div className="flex justify-between items-center p-2 border-b border-[#333]">
+            <p className="text-sm text-[#FBE9E7]">
+              S{selectedEpisode.season} • E{selectedEpisode.episode}
+            </p>
+            <button
+              onClick={() => setSelectedEpisode(null)}
+              className="text-[#FFAB91] hover:text-[#FF7043] text-xs"
+            >
+              ✕ Close
+            </button>
+          </div>
+          <VideoPlayer
+            id={tv.id}
+            type="tv"
+            season={selectedEpisode.season}
+            episode={selectedEpisode.episode}
+          />
+        </div>
+      )}
     </main>
   );
 }

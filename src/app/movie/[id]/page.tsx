@@ -101,15 +101,18 @@ export default async function MoviePage(props: MoviePageProps) {
           {/* ⭐ FIX APPLIED: item is now implicitly typed as PopularMovieItem */}
           {related.results?.slice(0, 10).map((item) => (
             <ContentCard
-              key={item.id}
-              card={{
-                id: item.id,
-                title: item.title,
-                posterUrl: getTmdbImageUrl(item.poster_path),
-                releaseDate: item.release_date,
-                overview: item.overview,
-                type: 'movie',
-              }}
+  key={item.id}
+  card={{
+    id: item.id,
+    title: item.title,
+    imageUrl: getTmdbImageUrl(item.poster_path), // ✅ added
+    posterUrl: getTmdbImageUrl(item.poster_path), // ✅ kept for consistency
+    releaseDate: item.release_date,
+    overview: item.overview,
+    genre: movie.genres?.[0]?.name || "Unknown", // ✅ added fallback genre
+    year: item.release_date?.slice(0, 4) || "N/A", // ✅ derived from release date
+    type: "movie",
+  }}
             />
           ))}
         </div>

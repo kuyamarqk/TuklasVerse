@@ -2,13 +2,14 @@
 
 import { useState } from 'react';
 import ContentCard from '@/component/ContentCard';
+import { ContentCardType } from '@/src/types';
 
 export default function TvGrid({
   popular,
   trending,
 }: {
-  popular: TvType[];
-  trending: TvType[];
+  popular: ContentCardType[];
+  trending: ContentCardType[];
 }) {
   const [filter, setFilter] = useState<'popular' | 'trending'>('popular');
   const shows = filter === 'popular' ? popular : trending;

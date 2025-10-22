@@ -1,13 +1,12 @@
-// src/app/tv/[id]/SeasonList.tsx (Corrected)
+// src/app/tv/[id]/SeasonList.tsx
 'use client';
 
 import { useState } from 'react';
 import Image from 'next/image';
 import { getTmdbImageUrl } from '@/lib/tmdb-api';
-import VideoPlayer from './VideoPlayer';
 
 // ====================================================================
-// ⭐ NEW: Type Definitions for Episodes
+// ⭐ Type Definitions
 // ====================================================================
 
 interface Episode {
@@ -16,32 +15,29 @@ interface Episode {
   name: string;
   overview: string;
   still_path: string | null;
-  // Add any other properties your component uses from the episode object
 }
 
-// ----------------------------------------------------------------------
+interface Season {
+  season_number: number;
+  name: string;
+  episode_count: number;
+  overview: string;
+  poster_path: string | null;
+}
 
-export default function SeasonList({
-  seasons,
-  tvId,
-}: {
-  seasons: {
-    season_number: number;
-    name: string;
-    episode_count: number;
-    overview: string;
-    poster_path: string | null;
-  }[];
+interface SeasonListProps {
+  seasons: Season[];
   tvId: number;
-  // NOTE: If you had an onSelectEpisode prop, it would be added here:
-  // onSelectEpisode: (data: { season: number; episode: number } | null) => void;
-}) {
+  onSelectEpisode: (data: { season: number; episode: number }) => void;
+}
+
+// ====================================================================
+// 🌟 Component
+// ====================================================================
+
+export default function SeasonList({ seasons, tvId, onSelectEpisode }: SeasonListProps) {
   const [expandedSeason, setExpandedSeason] = useState<number | null>(null);
-  
-  // ⭐ FIX LINE 22: Replace any[] with Episode[]
-  const [episodes, setEpisodes] = useState<Record<number, Episode[]>>({}); 
-  
-  const [activeEpisode, setActiveEpisode] = useState<{ season: number; episode: number } | null>(null);
+  const [episodes, setEpisodes] = useState<Record<number, Episode[]>>({});
 
   const handleToggle = async (seasonNumber: number) => {
     if (expandedSeason === seasonNumber) {
@@ -49,9 +45,11 @@ export default function SeasonList({
       return;
     }
 
+    // Fetch episodes if not already cached
     if (!episodes[seasonNumber]) {
-      // NOTE: Assuming your API route returns an object like { episodes: [Episode, ...] }
-      const data: { episodes: Episode[] } = await fetch(`/api/season/${tvId}/${seasonNumber}`).then(res => res.json());
+      const data: { episodes: Episode[] } = await fetch(`/api/season/${tvId}/${seasonNumber}`).then((res) =>
+        res.json()
+      );
       setEpisodes((prev) => ({ ...prev, [seasonNumber]: data.episodes }));
     }
 
@@ -88,7 +86,6 @@ export default function SeasonList({
           {/* Episode List */}
           {expandedSeason === season.season_number && episodes[season.season_number] && (
             <ul className="mt-4 space-y-4 text-sm text-[#FBE9E7]">
-              {/* ⭐ FIX LINE 69: Removed : any, now implicitly typed as Episode */}
               {episodes[season.season_number].map((ep) => (
                 <li key={ep.id} className="border-b border-[#333] pb-4">
                   <div className="flex gap-4 items-start">
@@ -102,23 +99,18 @@ export default function SeasonList({
                       />
                     )}
                     <div className="flex-1">
-                      <strong>Episode {ep.episode_number}: {ep.name}</strong>
+                      <strong>
+                        Episode {ep.episode_number}: {ep.name}
+                      </strong>
                       <p className="text-[#BCAAA4]">{ep.overview}</p>
                       <button
-                        onClick={() => setActiveEpisode({ season: season.season_number, episode: ep.episode_number })}
+                        onClick={() => onSelectEpisode({ season: season.season_number, episode: ep.episode_number })}
                         className="mt-2 text-sm text-[#FFAB91] hover:text-[#FF7043] transition"
                       >
                         ▶ Watch
                       </button>
                     </div>
                   </div>
-
-                  {/* Inline Video Player */}
-                  {activeEpisode?.season === season.season_number && activeEpisode?.episode === ep.episode_number && (
-                    <div className="mt-4">
-                      <VideoPlayer id={tvId} type="tv" season={season.season_number} episode={ep.episode_number} />
-                    </div>
-                  )}
                 </li>
               ))}
             </ul>
