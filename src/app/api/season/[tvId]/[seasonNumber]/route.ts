@@ -4,19 +4,36 @@ export async function GET(
   request: NextRequest,
   context: { params: Promise<{ tvId: string; seasonNumber: string }> }
 ): Promise<Response> {
-  // ✅ Await the params because they're now a Promise
   const { tvId, seasonNumber } = await context.params;
 
-  // --- Your TMDB API logic here ---
-  // Example:
-  // const TMDB_API_KEY = process.env.TMDB_API_KEY;
-  // const url = `https://api.themoviedb.org/3/tv/${tvId}/season/${seasonNumber}?api_key=${TMDB_API_KEY}`;
-  // const res = await fetch(url);
-  // const data = await res.json();
+  // 1. Get your API Key from .env.local
+  const TMDB_API_KEY = process.env.TMDB_API_KEY; 
 
-  return NextResponse.json({
-    tvId,
-    seasonNumber,
-    message: "Data fetched successfully",
-  });
+  if (!TMDB_API_KEY) {
+    return NextResponse.json({ error: "API Key missing" }, { status: 500 });
+  }
+
+  try {
+    // 2. Fetch the actual season data from TMDB
+    const url = `https://api.themoviedb.org/3/tv/${tvId}/season/${seasonNumber}?api_key=${TMDB_API_KEY}&language=en-US`;
+    
+    const res = await fetch(url, {
+      next: { revalidate: 3600 } // Optional: Cache for 1 hour
+    });
+
+    if (!res.ok) {
+      return NextResponse.json({ error: "Failed to fetch from TMDB" }, { status: res.status });
+    }
+
+    const data = await res.json();
+
+    if (data.episodes && Array.isArray(data.episodes)) {
+  data.episodes.reverse();
+}
+
+    // 3. Return the actual data (which includes the 'episodes' array)
+    return NextResponse.json(data);
+  } catch (error) {
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
 }

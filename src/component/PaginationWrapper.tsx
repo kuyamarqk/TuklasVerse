@@ -1,29 +1,23 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import Pagination from './Pagination';
 
 interface PaginationWrapperProps {
   currentPage: number;
   totalPages: number;
+  onPageChange: (page: number) => void; // Add this prop
 }
 
 export default function PaginationWrapper({
   currentPage,
   totalPages,
+  onPageChange, // Receive it here
 }: PaginationWrapperProps) {
-  const router = useRouter();
-
-  const handlePageChange = (page: number) => {
-    router.push(`/movie?page=${page}`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   return (
     <Pagination
       currentPage={currentPage}
       totalPages={totalPages}
-      onPageChange={handlePageChange}
+      onPageChange={onPageChange} // Pass it down
     />
   );
 }

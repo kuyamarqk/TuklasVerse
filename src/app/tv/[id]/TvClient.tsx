@@ -61,11 +61,13 @@ export default function TvClient({
       <Section title="Series Details">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="md:col-span-1 space-y-4">
+            
             <h1 className="text-2xl font-bold">{tv.name}</h1>
             <p className="text-sm text-[#BCAAA4]">
               {tv.first_air_date?.slice(0, 4)} • {tv.episode_run_time?.[0] ?? 'N/A'} min/ep
             </p>
             <div className="flex flex-wrap gap-2">
+
               {tv.genres?.map((genre) => (
                 <span
                   key={genre.id}
@@ -91,6 +93,7 @@ export default function TvClient({
           tvId={tv.id}
           onSelectEpisode={setSelectedEpisode}
         />
+        
       </Section>
 
       {/* Related TV Series */}

@@ -1,4 +1,4 @@
-// src/app/tv-series/page.tsx (This is the file you originally provided, now refactored)
+
 
 import Hero from '@/component/Hero';
 import TvSeriesClient from './tvSeriesClient';
@@ -9,8 +9,6 @@ import {
   getPopularTvSeries,
   getTmdbTvGenres,
 } from '@/lib/tmdb-api';
-// We no longer need mapTv here, as it's done in the client component,
-// but we keep the type imports if mapTv is defined in a separate file.
 
 export default async function TvSeries() {
   const page = 1; // Initial page is always 1 for the server

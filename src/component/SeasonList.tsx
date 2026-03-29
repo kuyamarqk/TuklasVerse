@@ -1,7 +1,6 @@
-// src/app/tv/[id]/SeasonList.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { getTmdbImageUrl } from '@/lib/tmdb-api';
 
@@ -36,87 +35,99 @@ interface SeasonListProps {
 // ====================================================================
 
 export default function SeasonList({ seasons, tvId, onSelectEpisode }: SeasonListProps) {
-  const [expandedSeason, setExpandedSeason] = useState<number | null>(null);
+  // Initialize with the first season number
+  const [selectedSeason, setSelectedSeason] = useState<number>(seasons[0]?.season_number || 1);
   const [episodes, setEpisodes] = useState<Record<number, Episode[]>>({});
+  const [loading, setLoading] = useState(false);
 
-  const handleToggle = async (seasonNumber: number) => {
-    if (expandedSeason === seasonNumber) {
-      setExpandedSeason(null);
-      return;
-    }
+const fetchEpisodes = async (seasonNumber: number) => {
+    // If we already have the episodes for this season, don't fetch again
+    if (episodes[seasonNumber]) return;
 
-    // Fetch episodes if not already cached
-    if (!episodes[seasonNumber]) {
-      const data: { episodes: Episode[] } = await fetch(`/api/season/${tvId}/${seasonNumber}`).then((res) =>
-        res.json()
-      );
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/season/${tvId}/${seasonNumber}`);
+      const data = await res.json();
+      
+      // Update the dictionary: { 1: [ep1, ep2], 2: [ep1, ep2] }
       setEpisodes((prev) => ({ ...prev, [seasonNumber]: data.episodes }));
+    } catch (error) {
+      console.error("Error fetching episodes:", error);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    setExpandedSeason(seasonNumber);
+  useEffect(() => {
+    fetchEpisodes(selectedSeason);
+  }, [selectedSeason]);
+
+ const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedSeason(parseInt(e.target.value));
   };
 
   return (
     <div className="space-y-6">
-      {seasons.map((season) => (
-        <div key={season.season_number} className="bg-[#1a1a1a] rounded-md p-4 border border-[#333]">
-          <div className="flex gap-4 items-start">
-            {season.poster_path && (
-              <Image
-                src={getTmdbImageUrl(season.poster_path)}
-                alt={season.name}
-                width={100}
-                height={150}
-                className="rounded-md object-cover"
-              />
-            )}
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold">{season.name}</h3>
-              <p className="text-sm text-[#BCAAA4] mb-2">{season.episode_count} episodes</p>
-              <p className="text-sm text-[#BCAAA4]">{season.overview}</p>
-              <button
-                onClick={() => handleToggle(season.season_number)}
-                className="mt-2 text-sm text-[#FFAB91] hover:text-[#FF7043] transition"
-              >
-                {expandedSeason === season.season_number ? 'Hide Episodes' : 'View Episodes'}
-              </button>
-            </div>
-          </div>
+      {/* 1. Fixed Select Structure */}
+      <select 
+        className="bg-[#1a1a1a] text-white rounded-md p-4 border border-[#333] w-full cursor-pointer"
+        value={selectedSeason}
+        onChange={handleSelectChange}
+      >
+        {seasons.map((season) => (
+          <option key={season.season_number} value={season.season_number}>
+            {season.name} — {season.episode_count} Episodes
+          </option>
+        ))}
+      </select>
 
-          {/* Episode List */}
-          {expandedSeason === season.season_number && episodes[season.season_number] && (
-            <ul className="mt-4 space-y-4 text-sm text-[#FBE9E7]">
-              {episodes[season.season_number].map((ep) => (
-                <li key={ep.id} className="border-b border-[#333] pb-4">
-                  <div className="flex gap-4 items-start">
-                    {ep.still_path && (
+      {/* 2. Episode List Display */}
+     <div className="bg-[#1a1a1a] rounded-md border border-[#333] overflow-hidden">
+        {loading && !episodes[selectedSeason] ? (
+          <div className="p-8 text-center text-[#BCAAA4] animate-pulse">
+            Loading episodes...
+          </div>
+        ) : (
+          <ul className="divide-y divide-[#333]">
+            {/* Grab the array for the currently selected season key */}
+            {episodes[selectedSeason]?.map((ep) => (
+              <li key={ep.id} className="p-4 hover:bg-[#252525] transition-colors group">
+                <div className="flex gap-4 items-start">
+                  {/* Episode Thumbnail */}
+                  <div className="relative w-32 h-20 sm:w-48 sm:h-28 flex-shrink-0 bg-[#2a2a2a] rounded overflow-hidden">
+                    {ep.still_path ? (
                       <Image
                         src={getTmdbImageUrl(ep.still_path)}
                         alt={ep.name}
-                        width={160}
-                        height={90}
-                        className="rounded-md object-cover"
+                        fill
+                        className="object-cover"
                       />
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-xs text-gray-500">No Image</div>
                     )}
-                    <div className="flex-1">
-                      <strong>
-                        Episode {ep.episode_number}: {ep.name}
-                      </strong>
-                      <p className="text-[#BCAAA4]">{ep.overview}</p>
-                      <button
-                        onClick={() => onSelectEpisode({ season: season.season_number, episode: ep.episode_number })}
-                        className="mt-2 text-sm text-[#FFAB91] hover:text-[#FF7043] transition"
-                      >
-                        ▶ Watch
-                      </button>
-                    </div>
                   </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      ))}
+
+                  {/* Episode Info */}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm sm:text-base font-bold text-[#FBE9E7] truncate">
+                      {ep.episode_number}. {ep.name}
+                    </h4>
+                    <p className="text-xs sm:text-sm text-[#BCAAA4] line-clamp-2 mt-1 mb-2">
+                      {ep.overview || "No description available."}
+                    </p>
+                    <button
+                      onClick={() => onSelectEpisode({ season: selectedSeason, episode: ep.episode_number })}
+                      className="text-xs font-bold text-[#FFAB91] uppercase tracking-wider hover:text-white transition-colors"
+                    >
+                      ▶ Play Episode
+                    </button>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

@@ -7,11 +7,7 @@ import FilterWrapper from '@/component/FilterWrapper';
 import MovieGrid from '@/component/MovieGrid';
 import PaginationWrapper from '@/component/PaginationWrapper';
 
-import {
-  getTrendingTvSeries,
-  getPopularTvSeries,
-} from '@/lib/tmdb-api';
-import { mapTv, RelatedTvResponse, TmdbTv } from '@/lib/map-content'; // Assuming you define the necessary types here
+import { mapToContentCard, TmdbTv } from '@/lib/map-content';
 
 // Define the interface for the props passed from the server
 interface TvSeriesClientProps {
@@ -29,31 +25,33 @@ export default function TvSeriesClient({
 }: TvSeriesClientProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [activeGenre, setActiveGenre] = useState<string | null>(null);
-  const [trendingTV, setTrendingTV] = useState(mapTv(initialTrending));
-  const [popularTV, setPopularTV] = useState(mapTv(initialPopular));
+  const [trendingTV, setTrendingTV] = useState(mapToContentCard(initialTrending));
+  const [popularTV, setPopularTV] = useState(mapToContentCard(initialPopular));
   const [totalPages, setTotalPages] = useState(initialTotalPages);
   const [isLoading, setIsLoading] = useState(false);
 
   // Function to fetch data based on filters/pagination (runs client-side)
-  const fetchData = useCallback(async (page: number) => {
-    setIsLoading(true);
-    try {
-      // NOTE: You'll need a different API function here that handles genre filtering.
-      // For now, we'll just refetch the popular and trending lists for the new page.
+const fetchData = useCallback(async (page: number) => {
+  setIsLoading(true);
+  try {
+    // 1. Call your INTERNAL API (which has access to the key)
+    const [trendingRes, popularRes] = await Promise.all([
+      fetch(`/api/tv?type=trending&page=${page}`).then(res => res.json()),
+      fetch(`/api/tv?type=popular&page=${page}`).then(res => res.json())
+    ]);
 
-      const trendingRaw: RelatedTvResponse = await getTrendingTvSeries('day', page);
-      const popularRaw: RelatedTvResponse = await getPopularTvSeries(page);
-
-      setTrendingTV(mapTv(trendingRaw.results));
-      setPopularTV(mapTv(popularRaw.results));
-      setTotalPages(Math.max(trendingRaw.total_pages, popularRaw.total_pages));
-      setCurrentPage(page);
-    } catch (error) {
-      console.error('Failed to fetch filtered data:', error);
-    } finally {
-      setIsLoading(false);
+    // 2. Map the results just like before
+    if (trendingRes.results && popularRes.results) {
+      setTrendingTV(mapToContentCard(trendingRes.results));
+      setPopularTV(mapToContentCard(popularRes.results));
+      setTotalPages(Math.min(popularRes.total_pages, 500));
     }
-  }, []);
+  } catch (error) {
+    console.error('Failed to fetch data:', error);
+  } finally {
+    setIsLoading(false);
+  }
+}, []);
 
   // Effect to re-fetch when currentPage or activeGenre changes
   useEffect(() => {
@@ -75,8 +73,7 @@ export default function TvSeriesClient({
       <div className="mt-6">
         <FilterWrapper
           genres={genres}
-          onGenreChange={handleGenreChange}
-          
+          onGenreChange={handleGenreChange} activeGenre={null}          
         />
       </div>
 
@@ -87,10 +84,13 @@ export default function TvSeriesClient({
           <MovieGrid popular={popularTV} trending={trendingTV} />
         )}
         <PaginationWrapper
-          currentPage={currentPage}
-          totalPages={totalPages}
-          
-        />
+  currentPage={currentPage}
+  totalPages={totalPages}
+  onPageChange={(page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }}
+/>
       </Section>
     </>
   );
