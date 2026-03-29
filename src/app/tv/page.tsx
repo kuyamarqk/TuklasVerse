@@ -1,5 +1,3 @@
-
-
 import Hero from '@/component/Hero';
 import TvSeriesClient from './tvSeriesClient';
 
@@ -7,24 +5,24 @@ import {
   getHeroBackdrop,
   getTrendingTvSeries,
   getPopularTvSeries,
-  getTmdbTvGenres,
+  getTmdbTvGenres, // ADD THIS IMPORT
 } from '@/lib/tmdb-api';
 
 export default async function TvSeries() {
-  const page = 1; // Initial page is always 1 for the server
+  const page = 1;
 
-  // Fetch all data on the server
+  // Fetch data on the server
   const hero = await getHeroBackdrop('tv');
   const trendingRaw = await getTrendingTvSeries('day', page);
   const popularRaw = await getPopularTvSeries(page);
-  const genresData = await getTmdbTvGenres();
   
-  // No need to map the data here; pass raw data (or map it in the client component)
-  const initialTotalPages = Math.max(trendingRaw.total_pages, popularRaw.total_pages);
+  // FIX: Fetch the genre LIST, not series by genre
+  const genresData = await getTmdbTvGenres(); 
+  
+  const initialTotalPages = Math.max(trendingRaw.total_pages || 0, popularRaw.total_pages || 0);
   
   return (
     <main className="font-sans bg-[#121212] text-[#FBE9E7] min-h-screen">
-      {/* 1. Hero is Static/Server-Rendered */}
       <Hero
         backdropUrl={hero.backdropUrl}
         title={hero.title}
@@ -33,12 +31,11 @@ export default async function TvSeries() {
         type={hero.type}
       />
 
-      {/* 2. Pass all fetched data as props to the client component */}
       <TvSeriesClient
-        initialTrending={trendingRaw.results}
-        initialPopular={popularRaw.results}
+        initialTV={trendingRaw.results || []}
+        initialPopular={popularRaw.results || []}
         initialTotalPages={initialTotalPages}
-        genres={genresData.genres}
+        genres={genresData.genres || []} // This will now work
       />
     </main>
   );

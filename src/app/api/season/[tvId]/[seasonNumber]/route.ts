@@ -7,7 +7,9 @@ export async function GET(
   const { tvId, seasonNumber } = await context.params;
 
   // 1. Get your API Key from .env.local
-  const TMDB_API_KEY = process.env.TMDB_API_KEY; 
+  // Old line: const TMDB_API_KEY = process.env.TMDB_API_KEY;
+// New line:
+const TMDB_API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
 
   if (!TMDB_API_KEY) {
     return NextResponse.json({ error: "API Key missing" }, { status: 500 });

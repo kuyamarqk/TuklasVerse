@@ -1,106 +1,114 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { ChevronLeftIcon, ChevronRightIcon, MagnifyingGlassIcon } from '@heroicons/react/24/solid'; // ⭐ Imported MagnifyingGlassIcon
+import { ChevronLeftIcon, ChevronRightIcon, MagnifyingGlassIcon } from '@heroicons/react/24/solid';
 
 export default function FilterBar({
   genres,
   onSelectGenre,
-  onSearch, // ⭐ Used in handleSearch
+  onSearch,
 }: {
   genres: { id: number; name: string }[];
-  onSelectGenre: (genre: string) => void;
+  onSelectGenre: (genreId: string) => void; // Changed to expect an ID string
   onSearch: (query: string) => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [activeGenre, setActiveGenre] = useState<string | null>(null);
-  const [search, setSearch] = useState(''); // ⭐ Used in handleSearch and input value
+  const [activeGenreId, setActiveGenreId] = useState<number | null>(null);
+  const [search, setSearch] = useState('');
 
-  const handleGenreClick = (genre: string) => {
-    setActiveGenre(genre);
-    onSelectGenre(genre);
-    // Optionally clear search when a genre is selected
-    setSearch('');
-    onSearch(''); 
+  const handleGenreClick = (id: number) => {
+    setActiveGenreId(id);
+    onSelectGenre(id.toString()); // Pass the ID to the API
+    setSearch(''); // Clear search when a genre is picked
   };
-  
-  // ⭐ NEW: Handle search form submission
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch(search);
-    // Optionally clear active genre when searching
-    setActiveGenre(null); 
+    if (search.trim()) {
+      onSearch(search);
+      setActiveGenreId(null);
+    } else {
+      
+      onSelectGenre(''); 
+    }
   };
 
-  const scrollLeft = () => {
-    scrollRef.current?.scrollBy({ left: -200, behavior: 'smooth' });
-  };
-
-  const scrollRight = () => {
-    scrollRef.current?.scrollBy({ left: 200, behavior: 'smooth' });
+  const scroll = (direction: 'left' | 'right') => {
+    const { current } = scrollRef;
+    if (current) {
+      const scrollAmount = direction === 'left' ? -300 : 300;
+      current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
   };
 
   return (
-    <div className="relative flex flex-col gap-4 px-6 py-4 bg-[#121212]">
+    <div className="relative flex flex-col gap-6 px-6 py-6 bg-[#121212] border-b border-[#1a1a1a]">
       
-      {/* Search Input (New Section) */}
-      <form onSubmit={handleSearch} className="flex items-center w-full max-w-lg mx-auto">
+      {/* 1. Search Section */}
+      <form onSubmit={handleSearch} className="flex items-center w-full max-w-2xl mx-auto group">
         <div className="relative w-full">
           <input
             type="text"
-            placeholder="Search for a movie or TV series..."
-            value={search} // ⭐ Used 'search'
-            onChange={(e) => setSearch(e.target.value)} // ⭐ Used 'setSearch'
-            className="w-full pl-10 pr-4 py-2 rounded-full bg-[#1a1a1a] text-[#FBE9E7] placeholder-[#BCAAA4] border border-[#333] focus:border-[#2196F3] focus:ring-1 focus:ring-[#2196F3] transition"
+            placeholder="Search for movies..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-12 pr-4 py-3 rounded-xl bg-[#1a1a1a] text-[#FBE9E7] placeholder-[#BCAAA4] border border-[#333] focus:border-[#FF8A65] focus:ring-1 focus:ring-[#FF8A65] outline-none transition-all"
           />
-          <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#BCAAA4]" />
+          <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[#BCAAA4] group-focus-within:text-[#FF8A65] transition-colors" />
         </div>
         <button
           type="submit"
-          className="ml-2 px-4 py-2 bg-[#FF8A65] text-[#121212] font-semibold rounded-full hover:bg-[#FFAB91] transition"
+          className="ml-3 px-6 py-3 bg-[#FF8A65] text-[#121212] font-bold rounded-xl hover:bg-[#FFAB91] active:scale-95 transition-all"
         >
-          Go
+          Search
         </button>
       </form>
-      
-      {/* Genre Scroll Bar */}
-      <div className="relative flex items-center">
-        {/* Left Arrow */}
+
+      {/* 2. Genre Section */}
+      <div className="relative flex items-center group/scroll">
         <button
-          onClick={scrollLeft}
-          className="absolute left-0 z-10 bg-[#1a1a1a] p-2 rounded-full hover:bg-[#2a2a2a] transition shadow-lg"
+          onClick={() => scroll('left')}
+          className="absolute left-0 z-20 bg-gradient-to-r from-[#121212] via-[#121212] to-transparent p-2 pr-8 hover:scale-110 transition-transform opacity-0 group-hover/scroll:opacity-100"
         >
-          <ChevronLeftIcon className="h-5 w-5 text-[#FBE9E7]" />
+          <ChevronLeftIcon className="h-6 w-6 text-[#FBE9E7]" />
         </button>
 
-        {/* Scrollable Genre Buttons */}
         <div
           ref={scrollRef}
-          className="flex overflow-x-auto gap-3 px-10 scrollbar-hide w-full"
+          className="flex overflow-x-auto gap-3 px-2 scrollbar-hide w-full mask-fade"
         >
+          {/* Add an "All" button to clear filters */}
+          <button
+            onClick={() => { setActiveGenreId(null); onSelectGenre(''); }}
+            className={`whitespace-nowrap px-5 py-2 rounded-full font-medium border transition-all ${
+              activeGenreId === null 
+              ? 'bg-[#FF8A65] text-black border-[#FF8A65]' 
+              : 'bg-[#1a1a1a] text-[#BCAAA4] border-[#333] hover:border-[#BCAAA4]'
+            }`}
+          >
+            All
+          </button>
+
           {genres.map((genre) => (
             <button
               key={genre.id}
-              onClick={() => handleGenreClick(genre.name)}
-              className={`relative whitespace-nowrap px-4 py-2 rounded-full font-medium transition-all duration-200
-                ${
-                  activeGenre === genre.name
-                    ? 'bg-[#1a1a1a] text-[#FBE9E7] border border-[#FF8A65]'
-                    : 'bg-[#1a1a1a] text-[#BCAAA4] border border-[#333] hover:border-[#FFAB91]'
-                }`}
+              onClick={() => handleGenreClick(genre.id)}
+              className={`whitespace-nowrap px-5 py-2 rounded-full font-medium border transition-all ${
+                activeGenreId === genre.id
+                  ? 'bg-[#FF8A65] text-black border-[#FF8A65]'
+                  : 'bg-[#1a1a1a] text-[#BCAAA4] border-[#333] hover:border-[#FFAB91]'
+              }`}
             >
               {genre.name}
-              {/* Removed the second active indicator span for cleaner look, as border is already used */}
             </button>
           ))}
         </div>
 
-        {/* Right Arrow */}
         <button
-          onClick={scrollRight}
-          className="absolute right-0 z-10 bg-[#1a1a1a] p-2 rounded-full hover:bg-[#2a2a2a] transition shadow-lg"
+          onClick={() => scroll('right')}
+          className="absolute right-0 z-20 bg-gradient-to-l from-[#121212] via-[#121212] to-transparent p-2 pl-8 hover:scale-110 transition-transform opacity-0 group-hover/scroll:opacity-100"
         >
-          <ChevronRightIcon className="h-5 w-5 text-[#FBE9E7]" />
+          <ChevronRightIcon className="h-6 w-6 text-[#FBE9E7]" />
         </button>
       </div>
     </div>

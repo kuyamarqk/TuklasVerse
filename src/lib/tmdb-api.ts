@@ -1,24 +1,41 @@
-const TMDB_API_KEY = process.env.TMDB_API_KEY;
+// Old line: const TMDB_API_KEY = process.env.TMDB_API_KEY;
+// New line:
+const TMDB_API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
 
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
-function fetchFromTmdb(endpoint: string, page = 1) {
+export interface TmdbMedia {
+  id: number;
+  title?: string;      // Used by Movies
+  name?: string;       // Used by TV Shows
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  media_type?: 'movie' | 'tv' | 'person';
+  release_date?: string;   // Used by Movies
+  first_air_date?: string; // Used by TV Shows
+  vote_average: number;
+}
+
+function fetchFromTmdb(endpoint: string, page = 1, extraParams = '') {
   if (!TMDB_API_KEY) {
-    throw new Error('TMDB API key is missing. Please check your .env.local file.');
+    throw new Error('TMDB API key is missing.');
   }
-  const url = `${TMDB_BASE_URL}${endpoint}?api_key=${TMDB_API_KEY}&language=en-US&page=${page}`;
+
+  // Combine them into the URL string
+  const url = `${TMDB_BASE_URL}${endpoint}?api_key=${TMDB_API_KEY}&language=en-US&page=${page}${extraParams}`;
 
   return fetch(url)
     .then((res) => {
       if (!res.ok) {
-        throw new Error(`TMDB fetch failed: ${res.status} ${res.statusText}`);
+        throw new Error(`TMDB fetch failed: ${res.status}`);
       }
       return res.json();
     })
     .catch((err) => {
       console.error('TMDB API error:', err);
-      return { results: [] }; // fallback to empty array
+      return { results: [] }; 
     });
 }
 
@@ -56,13 +73,28 @@ export async function getSeasonEpisodes(tvId: number, seasonNumber: number) {
 
 
 export async function getTmdbMovieGenres() {
-  return fetchFromTmdb(`/genre/movie/list`);
+  try {
+    const url = `${TMDB_BASE_URL}/genre/movie/list?api_key=${TMDB_API_KEY}&language=en-US`;
+    const res = await fetch(url);
+    const data = await res.json();
+    return data; // Should return { genres: [...] }
+  } catch (error) {
+    console.error("Movie Genre fetch error:", error);
+    return { genres: [] }; // Fallback to empty array to prevent .map() crashes
+  }
 }
 
 export async function getTmdbTvGenres() {
-  return fetchFromTmdb(`/genre/tv/list`);
+  try {
+    const url = `${TMDB_BASE_URL}/genre/tv/list?api_key=${TMDB_API_KEY}&language=en-US`;
+    const res = await fetch(url);
+    const data = await res.json();
+    return data; // Returns { genres: [{ id: 18, name: "Drama" }, ...] }
+  } catch (error) {
+    console.error("TV Genre list error:", error);
+    return { genres: [] }; 
+  }
 }
-
 export function getTmdbImageUrl(path: string | null, size: 'w500' | 'original' = 'w500') {
   return path ? `https://image.tmdb.org/t/p/${size}${path}` : '/placeholders/default-poster.jpg';
 }
@@ -94,6 +126,18 @@ export async function getHeroBackdrop(type: 'movie' | 'tv' = 'movie') {
     id: selected?.id ?? 0,
     type,
   };
+}
+
+
+export async function multiSearch(query: string) {
+  try {
+    const res = await fetch(`https://api.themoviedb.org/3/search/multi?query=${query}...`);
+    const data = await res.json();
+    return data; // ✨ You must return the data object
+  } catch (error) {
+    console.error(error);
+    return { results: [] }; // ✨ Return a fallback so '.results' always exists
+  }
 }
 
 

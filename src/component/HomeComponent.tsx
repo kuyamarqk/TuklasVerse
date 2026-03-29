@@ -1,105 +1,151 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import Section from '@/component/Section';
-import FilterWrapper from '@/component/FilterWrapper';
-import MovieGrid from '@/component/MovieGrid';
-import PaginationWrapper from '@/component/PaginationWrapper';
-
-import { mapToContentCard, TmdbMovie } from '@/lib/map-content';
+import ContentCard from '@/component/ContentCard'; // Fixed import path to use @ alias
+import FilterBar from '@/component/FilterBar';
+import { mapToContentCard, TmdbMovie, TmdbTv } from '@/lib/map-content';
 import { ContentCardType } from '@/src/types';
+import { multiSearch, getTmdbMovieGenres } from '@/lib/tmdb-api';
 
 interface HomeClientProps {
-  initialTrending: TmdbMovie[];
-  initialPopular: TmdbMovie[];
-  initialTotalPages: number;
+  initialPopular: TmdbMovie[]; 
+  initialTV: TmdbTv[]; 
   genres: { id: number; name: string }[];
 }
 
-export default function HomeClient({
-  initialTrending,
-  initialPopular,
-  initialTotalPages,
-  genres,
-}: HomeClientProps) {
-  // --- State ---
-  const [currentPage, setCurrentPage] = useState(1);
-  const [activeGenre, setActiveGenre] = useState<string | null>(null);
-  const [trendingMovies, setTrendingMovies] = useState<ContentCardType[]>(mapToContentCard(initialTrending));
-  const [popularMovies, setPopularMovies] = useState<ContentCardType[]>(mapToContentCard(initialPopular));
-  const [totalPages, setTotalPages] = useState(initialTotalPages);
+export default function HomeClient({ initialPopular, initialTV, genres }: HomeClientProps) {
+  // --- State Management ---
+  const [movies, setMovies] = useState<ContentCardType[]>(mapToContentCard(initialPopular));
+  const [tvShows, setTvShows] = useState<ContentCardType[]>(mapToContentCard(initialTV));
+  
+  // searchResults is null when browsing default home, and an array when searching/filtering
+  const [searchResults, setSearchResults] = useState<ContentCardType[] | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // --- Data Fetching ---
-  const fetchData = useCallback(async (page: number, genreName: string | null) => {
-    setIsLoading(true);
-    try {
-      // Find the ID for the API call
-      const genreObj = genres.find(g => g.name === genreName);
-      const genreQuery = genreObj ? `&genre=${genreObj.id}` : '';
-      
-      const [trendingRes, popularRes] = await Promise.all([
-        fetch(`/api/movies?type=trending&page=${page}${genreQuery}`).then(res => res.json()),
-        fetch(`/api/movies?type=popular&page=${page}${genreQuery}`).then(res => res.json())
-      ]);
+  // --- Logic Handlers ---
 
-      setTrendingMovies(mapToContentCard(trendingRes.results || []));
-      setPopularMovies(mapToContentCard(popularRes.results || []));
-      setTotalPages(Math.min(popularRes.total_pages || 500, 500));
+  /**
+   * 1. Handle Genre Selection
+   * Converts the string genreId to a Number for the API and updates the view.
+   */
+  const handleGenreSelect = async (genreId: string) => {
+    if (!genreId) {
+      // User cleared the filter: Reset to initial server-side data
+      setSearchResults(null);
+      setSearchQuery('');
+      setMovies(mapToContentCard(initialPopular));
+      setTvShows(mapToContentCard(initialTV));
+      return;
+    }
+
+    setIsLoading(true);
+    setSearchQuery(''); // Clear the search text if a genre is picked
+    try {
+      const data = await getTmdbMovieGenres();
+      
+      if (data && data.results) {
+        setSearchResults(mapToContentCard(data.results));
+      } else {
+        setSearchResults([]);
+      }
     } catch (error) {
-      console.error('Failed to update movies:', error);
+      console.error("Genre fetch failed:", error);
+      setSearchResults([]);
     } finally {
       setIsLoading(false);
     }
-  }, [genres]);
+  };
 
-  // --- Handlers ---
-  
-  // FIXED: Added handlePageChange logic
-  const handlePageChange = useCallback((page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
-
-  const handleGenreChange = useCallback((genre: string) => {
-    // Toggle genre: if clicking same one, reset to null
-    setActiveGenre(prev => (prev === genre ? null : genre));
-    setCurrentPage(1); // Reset to page 1 on filter change
-  }, []);
-
-  // --- Side Effects ---
-  useEffect(() => {
-    // Only fetch if we are NOT on the initial server-side state
-    if (currentPage !== 1 || activeGenre !== null) {
-      fetchData(currentPage, activeGenre);
+  /**
+   * 2. Handle Search
+   * Triggers the multi-search API and displays the results.
+   */
+  const handleSearch = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults(null);
+      setSearchQuery('');
+      return;
     }
-  }, [currentPage, activeGenre, fetchData]);
+
+    setIsLoading(true);
+    setSearchQuery(query);
+    try {
+      const data = await multiSearch(query);
+      
+      if (data && data.results) {
+        setSearchResults(mapToContentCard(data.results));
+      } else {
+        setSearchResults([]);
+      }
+    } catch (error) {
+      console.error("Search failed:", error);
+      setSearchResults([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <>
+    <div className="space-y-12 pb-20">
+      {/* Search and Filter Section */}
       <div className="mt-6">
-        <FilterWrapper
-          genres={genres}
-          activeGenre={activeGenre}
-          onGenreChange={handleGenreChange}
+        <FilterBar 
+          genres={genres} 
+          onSearch={handleSearch}
+          onSelectGenre={handleGenreSelect}
         />
       </div>
 
-      <Section title={activeGenre ? `Genre: ${activeGenre}` : "Trending Movies"}>
-        {isLoading ? (
-          <div className="flex justify-center items-center min-h-[400px]">
-             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-[#FFAB91]"></div>
-          </div>
+      {/* Main Content Area */}
+      <main>
+        {searchResults !== null ? (
+          /* VIEW A: Search Results or Filtered Genre Results */
+          <Section title={searchQuery ? `Results for "${searchQuery}"` : "Filtered Results"}>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+              {searchResults.length > 0 ? (
+                searchResults.map((item) => (
+                  <ContentCard key={`${item.type}-${item.id}`} card={item} />
+                ))
+              ) : (
+                <p className="col-span-full text-center py-20 text-[#BCAAA4]">
+                  No matching movies or series found.
+                </p>
+              )}
+            </div>
+          </Section>
         ) : (
-          <MovieGrid popular={popularMovies} trending={trendingMovies} />
-        )}
+          /* VIEW B: Default Home Dashboard */
+          <div className="space-y-12">
+            <Section title="Popular Movies" href="/movie">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+                {movies.slice(0, 10).map((item) => (
+                  <ContentCard key={`movie-${item.id}`} card={item} />
+                ))}
+              </div>
+            </Section>
 
-        <PaginationWrapper
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={handlePageChange} 
-        />
-      </Section>
-    </>
+            <Section title="Popular TV Series" href="/tv">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+                {tvShows.slice(0, 10).map((item) => (
+                  <ContentCard key={`tv-${item.id}`} card={item} />
+                ))}
+              </div>
+            </Section>
+          </div>
+        )}
+      </main>
+
+      {/* Global Loading Spinner Overlay */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50">
+           <div className="flex flex-col items-center gap-4">
+              <div className="animate-spin rounded-full h-14 w-14 border-t-2 border-[#FF8A65] border-r-2 "></div>
+              <p className="text-[#FF8A65] font-medium animate-pulse">Loading TuklasVerse...</p>
+           </div>
+        </div>
+      )}
+    </div>
   );
 }

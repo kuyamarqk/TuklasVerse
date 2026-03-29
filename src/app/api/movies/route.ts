@@ -9,25 +9,27 @@ export async function GET(request: NextRequest) {
   const page = searchParams.get("page") || "1";
   const type = searchParams.get("type") || "popular";
   const genreId = searchParams.get("genre");
-  const apiKey = process.env.TMDB_API_KEY;
+ // Old line: const TMDB_API_KEY = process.env.TMDB_API_KEY;
+// New line:
+const TMDB_API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
 
   let url = "";
 
   // 2. Prioritize Search if a query exists
   if (query && query.trim() !== "") {
-    url = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(query)}&page=${page}`;
+    url = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&page=${page}`;
   } 
   // 3. Fallback to Genre Filtering
   else if (genreId && genreId !== "null") {
-    url = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&page=${page}&with_genres=${genreId}`;
+    url = `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&page=${page}&with_genres=${genreId}`;
   } 
   // 4. Fallback to Trending
   else if (type === "trending") {
-    url = `https://api.themoviedb.org/3/trending/movie/day?api_key=${apiKey}&page=${page}`;
+    url = `https://api.themoviedb.org/3/trending/movie/day?api_key=${TMDB_API_KEY}&page=${page}`;
   } 
   // 5. Default to Popular
   else {
-    url = `https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&page=${page}`;
+    url = `https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_API_KEY}&page=${page}`;
   }
 
   try {

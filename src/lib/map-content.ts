@@ -35,13 +35,26 @@ export interface RelatedTvResponse {
 
 
 
-export function mapToContentCard(items: (TmdbMovie | TmdbTv)[]): ContentCardType[] {
+export function mapToContentCard(items: (TmdbMovie | TmdbTv)[] | undefined | null): ContentCardType[] {
+  
+  // 1. SAFETY CHECK: If items is undefined, null, or not an array, return an empty list.
+  // This prevents the "Cannot read properties of undefined (reading 'map')" error.
+  if (!items || !Array.isArray(items)) {
+    return [];
+  }
+
   return items.map((item) => {
-    const isMovie = 'title' in item;
-    const title = isMovie ? item.title : item.name;
+    // Check if it's a movie by looking for 'title' OR 'release_date'
+    const isMovie = 'title' in item || 'release_date' in item;
     
-    // TMDB uses 'release_date' for movies and 'first_air_date' for TV
-    const rawDate = isMovie ? item.release_date : item.first_air_date;
+    const title = isMovie 
+      ? (item as TmdbMovie).title 
+      : (item as TmdbTv).name;
+    
+    const rawDate = isMovie 
+      ? (item as TmdbMovie).release_date 
+      : (item as TmdbTv).first_air_date;
+
     const posterUrl = getTmdbImageUrl(item.poster_path);
 
     return {
@@ -49,12 +62,13 @@ export function mapToContentCard(items: (TmdbMovie | TmdbTv)[]): ContentCardType
       title: title ?? 'Untitled',
       imageUrl: getTmdbImageUrl(item.backdrop_path) || posterUrl,
       posterUrl: posterUrl,
-      releaseDate: rawDate ?? 'N/A', // 
+      releaseDate: rawDate ?? 'N/A',
       overview: item.overview || '',
       genre: isMovie ? 'Movie' : 'TV Series',
-      year: rawDate?.slice(0, 4) ?? 'N/A',
+      year: rawDate ? rawDate.slice(0, 4) : 'N/A',
       type: isMovie ? 'movie' : 'tv',
       score: item.vote_average,
     };
   });
+
 }
