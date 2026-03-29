@@ -68,8 +68,8 @@ export default function VideoPlayer({
       </div>
       
       <p className="text-[10px] text-zinc-500 italic">
-        Note: If the player doesn't load, try switching to a different server.
-      </p>
+  Note: If the player doesn&apos;t load, try switching to a different server.
+</p>
     </div>
   );
 }

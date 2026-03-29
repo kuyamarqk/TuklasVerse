@@ -4,17 +4,17 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Bars3Icon, XMarkIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
-import {useRouter, useSearchParams, usePathname } from 'next/navigation';
+// import {useRouter, useSearchParams, usePathname } from 'next/navigation';
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
-const pathname = usePathname();
-  const router = useRouter();
-  const searchParams = useSearchParams();
+// const pathname = usePathname();
+//   const router = useRouter();
+//   const searchParams = useSearchParams();
 
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
+  // const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -22,21 +22,21 @@ const pathname = usePathname();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      const params = new URLSearchParams(searchParams);
-      if (searchQuery) {
-        params.set('query', searchQuery);
-      } else {
-        params.delete('query');
-      }
+  // useEffect(() => {
+  //   const delayDebounceFn = setTimeout(() => {
+  //     const params = new URLSearchParams(searchParams);
+  //     if (searchQuery) {
+  //       params.set('query', searchQuery);
+  //     } else {
+  //       params.delete('query');
+  //     }
       
-      // This updates the URL without leaving the current page
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    }, 500); // 500ms delay
+  //     // This updates the URL without leaving the current page
+  //     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  //   }, 500); // 500ms delay
 
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery, pathname, router, searchParams]);
+  //   return () => clearTimeout(delayDebounceFn);
+  // }, [searchQuery, pathname, router, searchParams]);
 
   return (
     <header
@@ -77,7 +77,7 @@ const pathname = usePathname();
             <MagnifyingGlassIcon className="h-5 w-5 text-[#FBE9E7]" />
           </button>
 
-          {showSearch && (
+          {/* {showSearch && (
             <input
               type="text"
               value={searchQuery}
@@ -85,7 +85,7 @@ const pathname = usePathname();
               placeholder="Search movies..."
               className="px-4 py-2 rounded-md bg-[#1a1a1a] text-[#FBE9E7] border border-[#333] focus:outline-none focus:border-[#FF8A65] w-64 transition-all duration-300"
             />
-          )}
+          )} */}
         </div>
 
         {/* Mobile Toggle */}
@@ -123,13 +123,13 @@ const pathname = usePathname();
 
         {/* Mobile Search (Always Visible) */}
         <div className="mt-6">
-          <input
+          {/* <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search movies..."
             className="w-full px-4 py-2 rounded-md bg-[#1a1a1a] text-[#FBE9E7] border border-[#333] focus:outline-none focus:border-[#FF8A65]"
-          />
+          /> */}
         </div>
       </div>
     </header>

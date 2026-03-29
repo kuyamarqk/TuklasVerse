@@ -40,27 +40,30 @@ export default function SeasonList({ seasons, tvId, onSelectEpisode }: SeasonLis
   const [episodes, setEpisodes] = useState<Record<number, Episode[]>>({});
   const [loading, setLoading] = useState(false);
 
-const fetchEpisodes = async (seasonNumber: number) => {
-    // If we already have the episodes for this season, don't fetch again
-    if (episodes[seasonNumber]) return;
+useEffect(() => {
+    // 1. Move function inside to satisfy the dependency rule
+    const fetchEpisodesData = async () => {
+      // If we already have the episodes for this season, don't fetch again
+      if (episodes[selectedSeason]) return;
 
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/season/${tvId}/${seasonNumber}`);
-      const data = await res.json();
-      
-      // Update the dictionary: { 1: [ep1, ep2], 2: [ep1, ep2] }
-      setEpisodes((prev) => ({ ...prev, [seasonNumber]: data.episodes }));
-    } catch (error) {
-      console.error("Error fetching episodes:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/season/${tvId}/${selectedSeason}`);
+        const data = await res.json();
+        
+        setEpisodes((prev) => ({ 
+          ...prev, 
+          [selectedSeason]: data.episodes 
+        }));
+      } catch (error) {
+        console.error("Error fetching episodes:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  useEffect(() => {
-    fetchEpisodes(selectedSeason);
-  }, [selectedSeason]);
+    fetchEpisodesData();
+  }, [episodes, selectedSeason, tvId]);
 
  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedSeason(parseInt(e.target.value));

@@ -34,6 +34,7 @@ export async function GET(
     // 3. Return the actual data (which includes the 'episodes' array)
     return NextResponse.json(data);
   } catch (error) {
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
-  }
+  console.error("Season API Error:", error); // Now the variable is "used"
+  return NextResponse.json({ error: "Fetch failed" }, { status: 500 });
+}
 }
