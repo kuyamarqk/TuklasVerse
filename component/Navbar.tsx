@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Search, Bookmark, Home, LogOut } from "lucide-react";
 import { useMemo } from "react";
 import { createBrowserClient } from "@supabase/ssr";
+import Image from "next/image";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -35,9 +36,24 @@ export default function Navbar() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0f]/80 backdrop-blur-md border-b border-white/5">
       <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
-        <Link href="/" className="text-lg font-bold tracking-tight select-none">
-          Tuklas<span className="text-violet-400">Verse</span>
-        </Link>
+        <Link href="/" className="flex items-center gap-2.5 group">
+        {/* 2. Insert the Logo Image here */}
+        <div className="relative w-7 h-7 rounded-lg overflow-hidden border border-white/10 group-hover:border-violet-500/50 transition-colors shadow-md shadow-violet-950/20">
+          <Image
+            src="/icon.png" // Points to the file you put inside the 'app' or 'public' directory
+            alt="TuklasVerse Logo"
+            width={28}
+            height={28}
+            priority
+            className="object-cover w-full h-full scale-105 group-hover:scale-110 transition-transform duration-300"
+          />
+        </div>
+
+        {/* Brand Text */}
+        <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-zinc-100 to-zinc-400 bg-clip-text text-transparent group-hover:from-white group-hover:to-violet-400 transition-all duration-300">
+          TuklasVerse
+        </span>
+      </Link>
 
         <div className="flex items-center gap-1">
           {links.map(({ href, icon: Icon, label }) => (
@@ -56,7 +72,7 @@ export default function Navbar() {
           ))}
 
           {/* Styled Separator Line */}
-          <div className="h-4 w-[1px] bg-white/10 mx-2 hidden sm:block" />
+          <div className="h-4 w-px bg-white/10 mx-2 hidden sm:block" />
 
           <button
             onClick={handleSignOut}
