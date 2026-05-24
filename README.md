@@ -1,4 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🌌 TuklasVerse
+
+TuklasVerse is a high-performance, cinematic movie and TV series streaming/discovery application. Built on top of **Next.js**, it blends secure server-side data extraction with an ultra-responsive, fluid single-page client interface.
+
+## 🚀 Live Demo & Deployment
+* **Live Link:** [https://tuklasverse.netlify.app](https://tuklasverse.netlify.app) *(Update with your actual Netlify link)*
+* **Build Engine:** Optimized for edge deployments on Netlify with Serverless Functions.
+
+---
+
+## 🛠️ Tech Stack & Key Architectures
+
+* **Framework:** Next.js (App Router) fully typed with TypeScript.
+* **Database & Auth:** Supabase via `@supabase/ssr` for secure browser/server session synchronizations.
+* **Styling:** Tailwind CSS with an immersive, dark-theme glassmorphism design language.
+* **Data Provider:** The Movie Database (TMDB) API core integration.
+* **Client Validation:** Native React hooks structured around new pure-rendering idempotency protocols.
+
+---
+
+## ✨ Features
+
+- **Cinematic Authentications:** Desktop layout split featuring a fluid, non-blocking client-side dynamic media wall shuffling on every reload.
+- **Secure Server Core:** Direct server-side token abstraction via Next.js routes to prevent public API key exposure.
+- **Instant Fluid Routing:** Shallow state URL parameters (`window.history.pushState`) allowing immediate, zero-reload TV episode and server selection.
+- **Responsive Theater Elements:** Interactive widening media configurations directly manipulated on the client side without style-sheet recalculations.
+- **Built-in Resiliency:** Adaptive failovers that dynamically warn developers of missing environmental configurations instead of throwing catastrophic build-time crashes.
+
+---
+
+## 📦 Installation & Local Setup
+
+Follow these steps to spin up the platform on your local machine:
+
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/YOUR_USERNAME/tuklasverse.git](https://github.com/YOUR_USERNAME/tuklasverse.git)
+   cd "tuklasverse"
 
 ## Getting Started
 
