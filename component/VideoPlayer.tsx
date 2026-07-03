@@ -60,7 +60,7 @@ const [localEpisode, setLocalEpisode] = useState(episode);
       case "smashy": return `https://embed.smashystream.xyz/playere.php?tmdb=${tmdbId}`;
       case "ployan": return `https://ployan.me/embed/movie/${tmdbId}`;
       case "vidsrc_cc":
-      default: return `https://vidsrc.cc/v2/embed/movie/${tmdbId}`;
+      default: return `https://vidsrc.to/embed/movie/${tmdbId}`;
     }
   } else {
     switch (activeServer) {
@@ -70,7 +70,7 @@ const [localEpisode, setLocalEpisode] = useState(episode);
       case "smashy": return `https://embed.smashystream.xyz/playere.php?tmdb=${tmdbId}&season=${localSeason}&episode=${localEpisode}`;
       case "ployan": return `https://ployan.me/embed/tv/${tmdbId}/${localSeason}/${localEpisode}`;
       case "vidsrc_cc":
-      default: return `https://vidsrc.cc/v2/embed/tv/${tmdbId}/${localSeason}/${localEpisode}`;
+      default: return `https://vidsrc.to/embed/tv/${tmdbId}/${localSeason}/${localEpisode}`;
     }
   }
 };
