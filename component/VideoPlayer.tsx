@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { Play, Server, Maximize2, Minimize2, FastForward } from "lucide-react";
 import Image from "next/image";
@@ -39,14 +39,20 @@ export default function VideoPlayer({
   episode,
   seasonsData,
 }: VideoPlayerProps) {
-  
+
   const pathname = usePathname();
   const [hasClickedPlay, setHasClickedPlay] = useState(false);
   const [activeServer, setActiveServer] = useState("vidsrc_cc");
   const [isTheaterMode, setIsTheaterMode] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeSeasonTab, setActiveSeasonTab] = useState(season);
   const [localSeason, setLocalSeason] = useState(season);
   const [localEpisode, setLocalEpisode] = useState(episode);
+
+  // Ref on the wrapper that becomes the fullscreen target.
+  // Making the WRAPPER (not just the iframe) fullscreen means our
+  // floating buttons render inside the fullscreen layer too.
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   const validSeasons = seasonsData?.filter((s) => s.season_number > 0) || [];
   const selectedSeasonData = validSeasons.find((s) => s.season_number === activeSeasonTab);
@@ -75,18 +81,21 @@ export default function VideoPlayer({
   };
 
   const handleSelectionChange = (newSeason: number, newEpisode: number) => {
-    setHasClickedPlay(false); 
+    setHasClickedPlay(false);
     setLocalEpisode(newEpisode);
     setLocalSeason(newSeason);
-    setActiveSeasonTab(newSeason); 
+    setActiveSeasonTab(newSeason);
 
     const newUrl = `${pathname}?season=${newSeason}&episode=${newEpisode}`;
     window.history.pushState({ ...window.history.state, as: newUrl, url: newUrl }, "", newUrl);
-    
+
     setTimeout(() => setHasClickedPlay(true), 50);
   };
 
-  const handleNextEpisode = () => {
+  // Converted to useCallback so it has a stable identity for the
+  // message-listener effect's dependency array (and for the fullscreen
+  // next-episode button below).
+  const handleNextEpisode = useCallback(() => {
     if (mediaType !== "tv") return;
 
     const activeRunningSeasonData = validSeasons.find((s) => s.season_number === localSeason);
@@ -104,7 +113,28 @@ export default function VideoPlayer({
         alert("🎉 You have finished the final episode of the final season!");
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mediaType, validSeasons, localSeason, localEpisode]);
+
+  // Custom fullscreen toggle — fullscreens the wrapper div (iframe +
+  // floating buttons together), not just the iframe by itself.
+  const toggleFullscreen = () => {
+    if (!wrapperRef.current) return;
+
+    if (!document.fullscreenElement) {
+      wrapperRef.current.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
   };
+
+  useEffect(() => {
+    const handleFsChange = () => {
+      setIsFullscreen(document.fullscreenElement === wrapperRef.current);
+    };
+    document.addEventListener("fullscreenchange", handleFsChange);
+    return () => document.removeEventListener("fullscreenchange", handleFsChange);
+  }, []);
 
   useEffect(() => {
     const handleVideoMessage = (event: MessageEvent) => {
@@ -122,9 +152,12 @@ export default function VideoPlayer({
   return (
     /* ⭐ FIXED: Changed 'p-0!' to '!p-0' to keep compilation parser happy */
     <div className={`mx-auto px-4 sm:px-6 transition-all duration-300 ${isTheaterMode ? "max-w-none w-full p-0!" : "max-w-5xl"}`}>
-      
-      {/* ASPECT VIDEO WRAPPER FRAME */}
-      <div className={`relative aspect-video w-full overflow-hidden bg-zinc-950 border border-white/10 shadow-2xl transition-all duration-300 ${isTheaterMode ? "rounded-none border-x-0" : "rounded-2xl"}`}>
+
+      {/* ASPECT VIDEO WRAPPER FRAME — also the fullscreen target */}
+      <div
+        ref={wrapperRef}
+        className={`relative aspect-video w-full overflow-hidden bg-zinc-950 border border-white/10 shadow-2xl transition-all duration-300 ${isTheaterMode ? "rounded-none border-x-0" : "rounded-2xl"} ${isFullscreen ? "!rounded-none !border-0" : ""}`}
+      >
         {!hasClickedPlay ? (
           <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center p-4 text-center">
             {backdrop ? (
@@ -139,7 +172,7 @@ export default function VideoPlayer({
             ) : (
               <div className="absolute inset-0 bg-zinc-900" />
             )}
-            
+
             <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/40 to-transparent" />
 
             <button
@@ -160,6 +193,28 @@ export default function VideoPlayer({
             referrerPolicy="origin"
           />
         )}
+
+        {/* FLOATING FULLSCREEN TOGGLE (custom, wrapper-based) */}
+        {hasClickedPlay && (
+          <button
+            onClick={toggleFullscreen}
+            className="absolute top-3 right-3 z-20 flex items-center justify-center w-9 h-9 rounded-lg bg-black/60 hover:bg-black/80 text-white/80 hover:text-white backdrop-blur-sm border border-white/10 transition-all cursor-pointer"
+            title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+          >
+            {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+          </button>
+        )}
+
+        {/* FLOATING NEXT EPISODE BUTTON — only while fullscreen, TV only */}
+        {isFullscreen && mediaType === "tv" && hasClickedPlay && (
+          <button
+            onClick={handleNextEpisode}
+            className="absolute bottom-5 right-5 z-20 flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-full bg-violet-600/90 hover:bg-violet-500 text-white backdrop-blur-sm border border-violet-400/30 shadow-xl shadow-black/40 transition-all cursor-pointer"
+          >
+            <FastForward size={16} />
+            <span>Next Episode</span>
+          </button>
+        )}
       </div>
 
       {/* SERVER SWITCHER & CONTROL BAR */}
@@ -169,7 +224,7 @@ export default function VideoPlayer({
             <Server size={16} className="text-violet-400" />
             <span>Switch Streaming Server:</span>
           </div>
-          
+
           {mediaType === "tv" && (
             <button
               onClick={handleNextEpisode}
