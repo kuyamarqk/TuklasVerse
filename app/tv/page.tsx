@@ -1,15 +1,31 @@
 // app/tv/page.tsx
 import Link from "next/link";
 import MediaCard from "@/component/MediaCard";
-import { getTrending, Media } from "@/lib/tmdb";
+import Pagination from "@/component/Pagination";
+import { getPopularTV, Media } from "@/lib/tmdb";
 
-export default async function TVCatalogPage() {
+type PageProps = {
+  searchParams: Promise<{ page?: string }>;
+};
+
+export default async function TVCatalogPage({ searchParams }: PageProps) {
+  // Extract and parse page numbers safely from Server runtime
+  const resolvedParams = await searchParams;
+  const currentPage = Number(resolvedParams.page) || 1;
+  
   let tvShows: Media[] = []; 
+  let totalPages = 500; // TMDB enforces a hard limit cap of 500 pages max for list distributions
   let errorMessage = "";
 
   try {
-    const response = await getTrending("tv");
+    /* 🍿 FIXED: Hooked into your native getPopularTV library helper 
+       and forwarded the requested page index seamlessly. */
+    const response = await getPopularTV(currentPage);
+    
     tvShows = response?.results || [];
+    if (response?.total_pages) {
+      totalPages = Math.min(response.total_pages, 500);
+    }
   } catch (error) {
     console.error("Failed to fetch TV catalog profiles:", error);
     errorMessage = "Could not sync collection metrics from TMDB pipelines.";
@@ -45,12 +61,12 @@ export default async function TVCatalogPage() {
           Explore TV Shows
         </h1>
         <p className="text-xs text-zinc-500 mt-1 uppercase tracking-wider font-semibold">
-          Live TMDB Collection Network
+          Live TMDB Collection Network • Page {currentPage}
         </p>
       </header>
 
       {/* RESPONSIVE RENDERING ENGINE GRID */}
-      <main className="max-w-7xl mx-auto space-y-8">
+      <main className="max-w-7xl mx-auto">
         {errorMessage && (
           <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-400 mb-6">
             ⚠️ {errorMessage}
@@ -76,6 +92,15 @@ export default async function TVCatalogPage() {
               </div>
             ))}
           </div>
+        )}
+
+        {/* PAGINATION INTERACTIVE CONTROL STRIP */}
+        {!errorMessage && tvShows.length > 0 && (
+          <Pagination 
+            currentPage={currentPage} 
+            totalPages={totalPages} 
+            basePath="/tv" 
+          />
         )}
       </main>
 

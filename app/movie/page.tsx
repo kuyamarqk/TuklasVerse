@@ -2,7 +2,7 @@
 import Link from "next/link";
 import MediaCard from "@/component/MediaCard";
 import Pagination from "@/component/Pagination";
-import { getTrending, Media } from "@/lib/tmdb";
+import { getPopularMovies, Media } from "@/lib/tmdb";
 
 type PageProps = {
   searchParams: Promise<{ page?: string }>;
@@ -14,19 +14,13 @@ export default async function MovieCatalogPage({ searchParams }: PageProps) {
   const currentPage = Number(resolvedParams.page) || 1;
   
   let movies: Media[] = []; 
-  let totalPages = 500; // TMDB enforces a hard limit cap of 500 pages max for trending lists
+  let totalPages = 500; // TMDB enforces a hard limit cap of 500 pages max for list distributions
   let errorMessage = "";
 
   try {
-    /* 💡 FIXING THE TYPE MISMATCH:
-      If your getTrending configuration doesn't support page counts yet, we pass 
-      "day" or "week" to satisfy the second parameter, and append page options if your 
-      lib supports a third arguments object. 
-      
-      If your function doesn't accept a third argument, change this call to your general 
-      discover/fetcher helper, like: await tmdbFetch("/trending/movie/day", { page: currentPage })
-    */
-    const response = await getTrending("movie", "day"); 
+    /* 🍿 FIXED: Swapped getTrending out for getPopularMovies(currentPage) 
+       which correctly passes the page counter down to your TMDB fetch engine. */
+    const response = await getPopularMovies(currentPage); 
     
     movies = response?.results || [];
     if (response?.total_pages) {

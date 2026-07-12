@@ -117,11 +117,11 @@ export default function VideoPlayer({
 
     window.addEventListener("message", handleVideoMessage);
     return () => window.removeEventListener("message", handleVideoMessage);
-  }, [localSeason, localEpisode, validSeasons]);
+  }, [localSeason, localEpisode, validSeasons, handleNextEpisode]);
 
   return (
     /* ⭐ FIXED: Changed 'p-0!' to '!p-0' to keep compilation parser happy */
-    <div className={`mx-auto px-4 sm:px-6 transition-all duration-300 ${isTheaterMode ? "max-w-none w-full !p-0" : "max-w-5xl"}`}>
+    <div className={`mx-auto px-4 sm:px-6 transition-all duration-300 ${isTheaterMode ? "max-w-none w-full p-0!" : "max-w-5xl"}`}>
       
       {/* ASPECT VIDEO WRAPPER FRAME */}
       <div className={`relative aspect-video w-full overflow-hidden bg-zinc-950 border border-white/10 shadow-2xl transition-all duration-300 ${isTheaterMode ? "rounded-none border-x-0" : "rounded-2xl"}`}>
@@ -140,7 +140,7 @@ export default function VideoPlayer({
               <div className="absolute inset-0 bg-zinc-900" />
             )}
             
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/40 to-transparent" />
 
             <button
               onClick={() => setHasClickedPlay(true)}

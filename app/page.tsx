@@ -2,6 +2,7 @@
 import Navbar from "@/component/Navbar";
 import HeroBanner from "@/component/HeroBanner";
 import MediaRow from "@/component/MediaRow";
+import WatchHistoryRow from "@/component/WatchHistoryRow";
 import {
   getTrending,
   getPopularMovies,
@@ -27,12 +28,13 @@ export default async function HomePage() {
       <Navbar />
 
       <main className="pt-14">
-        {/* Full-bleed Hero Banner Panel */}
+        {/* Full-bleed Hero Banner Panel (Stays wide and immersive) */}
         {hero && <HeroBanner media={hero} />}
 
-        {/* Content Sliders Rows Container */}
-        <div className="py-8 space-y-2">
+        {/* ✨ Content Sliders Rows Container with Responsive Side Margins */}
+        <div className="py-8 space-y-2 px-4 sm:px-8 md:px-12 lg:px-16 max-w-480 mx-auto">
           {/* Slices item indexes safely to prevent duplicating the Hero card inside the row */}
+          <WatchHistoryRow />
           <MediaRow
             title="Trending this week"
             items={trending.results.slice(1, 15)}

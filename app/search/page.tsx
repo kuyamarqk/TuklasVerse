@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import Navbar from "@/component/Navbar";
 import MediaCard from "@/component/MediaCard";
 import { SearchResult, MediaType } from "@/lib/tmdb";
@@ -61,7 +61,7 @@ export default function SearchPage() {
   }, []);
 
   /* ---------------------------
-      INPUT HANDLER
+      INPUT HANDLERS
   ---------------------------- */
   const onInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -76,6 +76,14 @@ export default function SearchPage() {
     }, 400);
   };
 
+  const clearSearch = () => {
+    setQuery("");
+    setResults([]);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (abortRef.current) abortRef.current.abort();
+    setLoading(false);
+  };
+
   /* ---------------------------
       UI
   ---------------------------- */
@@ -83,14 +91,13 @@ export default function SearchPage() {
     <div className="min-h-screen bg-[#0a0a0f] text-zinc-100">
       <Navbar />
 
-      {/* Increased top padding and outer container max-width for cleaner margins */}
-      <main className="pt-28 pb-16 px-8 max-w-6xl mx-auto">
+      <main className="pt-28 pb-16 px-8 max-w-7xl mx-auto selection:bg-violet-500/30">
         
-        {/* SEARCH BAR CONTAINER (Added extra bottom margin) */}
-        <div className="relative max-w-xl mx-auto mb-16">
+        {/* SEARCH BAR CONTAINER */}
+        <div className="relative max-w-xl mx-auto mb-16 group">
           <Search
             size={18}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 group-focus-within:text-violet-400 transition-colors"
           />
 
           <input
@@ -99,27 +106,36 @@ export default function SearchPage() {
             onChange={onInput}
             autoFocus
             placeholder="Search movies, TV shows..."
-            className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-base text-white placeholder:text-white/30 focus:border-violet-500 outline-none transition-colors shadow-lg shadow-black/20"
+            className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-12 py-3.5 text-base text-white placeholder:text-white/30 focus:border-violet-500 focus:bg-white/[0.07] outline-none transition-all shadow-lg shadow-black/20"
           />
+
+          {/* ✨ Added interactive input reset button toggle */}
+          {query && (
+            <button
+              onClick={clearSearch}
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-white/30 hover:text-white rounded-lg hover:bg-white/10 transition-all cursor-pointer"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
 
         {/* LOADING ANIMATION ACCENT */}
         {loading && (
           <div className="flex justify-center py-24">
-            <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-violet-600 border-t-transparent rounded-full animate-spin" />
           </div>
         )}
 
         {/* RESULTS DISPATCH BLOCKS */}
         {!loading && results.length > 0 && (
-          <>
-            {/* Expanded tracking separation layout */}
+          <div className="animate-in fade-in-0 duration-500">
             <p className="text-xs text-white/40 uppercase tracking-widest font-semibold mb-6 select-none">
               {results.length} results found for &quot;{query}&quot;
             </p>
 
-            {/* ⭐ FIXED GRID: 2 columns on mobile, 3 on small tablets, and strictly 5 columns on desktop screens */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-6 gap-y-10 justify-items-center">
+            {/* ✨ FIXED GRID: Fully responsive layout scaling to 6 columns on modern desktop widths */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-6 gap-y-10 justify-items-center">
               {results.map((item) => (
                 <MediaCard
                   key={`${item.id}-${item.media_type}`}
@@ -128,19 +144,19 @@ export default function SearchPage() {
                 />
               ))}
             </div>
-          </>
+          </div>
         )}
 
         {/* SEARCH TERM YIELDED NO RECORDS */}
         {!loading && query && results.length === 0 && (
-          <p className="text-center text-white/30 text-sm py-24 tracking-wide">
+          <p className="text-center text-white/30 text-sm py-24 tracking-wide animate-in fade-in duration-300">
             No results found for &quot;{query}&quot;. Try another title.
           </p>
         )}
 
         {/* EMPTY BASE INITIAL LANDING STATE */}
         {!query && (
-          <p className="text-center text-white/20 text-xs uppercase tracking-widest font-medium py-32">
+          <p className="text-center text-white/20 text-xs uppercase tracking-widest font-medium py-32 select-none animate-in fade-in duration-300">
             Start typing to scan through movies and TV shows
           </p>
         )}

@@ -8,13 +8,19 @@ type PaginationProps = {
 };
 
 export default function Pagination({ currentPage, totalPages, basePath }: PaginationProps) {
-  // Cap visible page number boundaries dynamically so it doesn't overflow the screen
-  const startPage = Math.max(1, currentPage - 2);
-  const endPage = Math.min(totalPages, startPage + 4);
-  const adjustedStartPage = Math.max(1, Math.min(startPage, totalPages - 4));
+  // Ensure totalPages is at least 1
+  const maxPages = Math.max(1, totalPages);
+  
+  // ✨ FIX: Calculate clean, balanced sliding page numbers
+  let startPage = Math.max(1, currentPage - 2);
+  let endPage = Math.min(maxPages, startPage + 4);
+
+  if (endPage - startPage < 4) {
+    startPage = Math.max(1, endPage - 4);
+  }
 
   const pageNumbers = [];
-  for (let i = adjustedStartPage; i <= endPage; i++) {
+  for (let i = startPage; i <= endPage; i++) {
     pageNumbers.push(i);
   }
 
@@ -29,7 +35,7 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
           ← Prev
         </Link>
       ) : (
-        <span className="px-3 py-2 rounded-xl bg-white/1 border border-white/2 text-xs font-medium text-zinc-600 cursor-not-allowed">
+        <span className="px-3 py-2 rounded-xl bg-white/5 opacity-40 border border-white/5 text-xs font-medium text-zinc-600 cursor-not-allowed">
           ← Prev
         </span>
       )}
@@ -50,7 +56,7 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
       ))}
 
       {/* NEXT BUTTON */}
-      {currentPage < totalPages ? (
+      {currentPage < maxPages ? (
         <Link
           href={`${basePath}?page=${currentPage + 1}`}
           className="px-3 py-2 rounded-xl bg-white/5 border border-white/5 text-xs font-medium text-zinc-300 hover:bg-white/10 hover:text-white transition-all"
@@ -58,7 +64,7 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
           Next →
         </Link>
       ) : (
-        <span className="px-3 py-2 rounded-xl bg-white/1 border border-white/2 text-xs font-medium text-zinc-600 cursor-not-allowed">
+        <span className="px-3 py-2 rounded-xl bg-white/5 opacity-40 border border-white/5 text-xs font-medium text-zinc-600 cursor-not-allowed">
           Next →
         </span>
       )}

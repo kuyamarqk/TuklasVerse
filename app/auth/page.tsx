@@ -4,13 +4,14 @@ import { useState, useMemo, useEffect } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { getAuthBackdropAction, AuthBackdrop } from "./action";
 
-const BACKGROUND_IMAGES = [
-  "https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1425&auto=format&fit=crop", 
-  "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1470&auto=format&fit=crop", 
-  "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1447&auto=format&fit=crop", 
-  "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1494&auto=format&fit=crop", 
-  "https://images.unsplash.com/photo-1574267431647-c82eca203e91?q=80&w=1631&auto=format&fit=crop"  
+// 🍿 Bulletproof static local fallbacks that work even if TMDB experiences downtime
+const FALLBACK_BACKDROPS: AuthBackdrop[] = [
+  { url: "https://image.tmdb.org/t/p/original/3VHpWp7jPgj3j0b34GWYvBtZ6qO.jpg", title: "The Dark Knight" },
+  { url: "https://image.tmdb.org/t/p/original/8Y999mZI66w877gD676FFY36g9v.jpg", title: "Interstellar" },
+  { url: "https://image.tmdb.org/t/p/original/5huY6S77ZreQ6vJ7Csh6Yp460D5.jpg", title: "Avatar: The Way of Water" },
+  { url: "https://image.tmdb.org/t/p/original/df8962K4fT66nKbyGZCHs4Y9UvX.jpg", title: "Inception" }
 ];
 
 export default function AuthPage() {
@@ -22,13 +23,23 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   
-  // 1. Initialize backdrop state as null to prevent hydration mismatch errors
-  const [randomBackdrop, setRandomBackdrop] = useState<string | null>(null);
+  // Set an immediate random static choice on load so the interface layout is never blank
+  const [randomBackdrop, setRandomBackdrop] = useState<AuthBackdrop | null>(null);
 
-  // 2. Safely compute the random image selection in an effect block after mounting
   useEffect(() => {
-    const randomIndex = Math.floor(Math.random() * BACKGROUND_IMAGES.length);
-    setRandomBackdrop(BACKGROUND_IMAGES[randomIndex]);
+    // 1. Instant rendering hydration sync
+    const localRandom = FALLBACK_BACKDROPS[Math.floor(Math.random() * FALLBACK_BACKDROPS.length)];
+    setRandomBackdrop(localRandom);
+
+    // 2. Safely call your secure server action to get a live trending title
+    async function loadLiveBackdrop() {
+      const liveBackdrop = await getAuthBackdropAction();
+      if (liveBackdrop) {
+        setRandomBackdrop(liveBackdrop);
+      }
+    }
+
+    loadLiveBackdrop();
   }, []);
 
   const supabase = useMemo(
@@ -72,15 +83,17 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0f] flex text-zinc-100">
       
-      {/* LEFT COLUMN: RANDOM CINEMATIC ARTWORK DISPLAY */}
+      {/* LEFT COLUMN: SECURE DYNAMIC MOVIE HERO DISPLAY */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-zinc-950 items-end p-12 overflow-hidden group">
-        <div className="absolute inset-0 z-0">
-          {/* Only render image tag when state has resolved on the client */}
+        <div className="absolute inset-0 z-0 w-full h-full">
           {randomBackdrop && (
             <Image
-              src={randomBackdrop}
-              alt="Cinematic Universe Backdrop"
-              className="w-full h-full object-cover opacity-40 scale-100 group-hover:scale-105 transition-transform duration-10000 ease-out"
+              src={randomBackdrop.url}
+              alt={`${randomBackdrop.title} Backdrop`}
+              fill
+              priority
+              sizes="50vw"
+              className="object-cover opacity-30 scale-100 group-hover:scale-105 transition-transform duration-10000 ease-out"
             />
           )}
           <div className="absolute inset-0 bg-linear-to-t from-[#0a0a0f] via-transparent to-transparent opacity-90" />
@@ -89,7 +102,7 @@ export default function AuthPage() {
         
         <div className="relative z-10 max-w-md space-y-2">
           <span className="text-xs font-bold uppercase tracking-widest text-violet-400 bg-violet-500/10 px-3 py-1 rounded-full border border-violet-500/20">
-            Now Streaming
+            {randomBackdrop ? `Featured: ${randomBackdrop.title}` : "Now Streaming"}
           </span>
           <h2 className="text-4xl font-black tracking-tight leading-none text-white drop-shadow-md">
             Discover Unlimited Entertainment.
@@ -124,7 +137,7 @@ export default function AuthPage() {
           </div>
 
           {/* FORM SHELL */}
-          <div className="bg-white/3 backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl shadow-black/40">
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl shadow-black/40">
             <h2 className="text-xl font-bold mb-5 tracking-tight text-white">
               {isSignUp ? "Create your account" : "Welcome back"}
             </h2>
@@ -183,7 +196,7 @@ export default function AuthPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-lg shadow-violet-600/20 active:scale-[0.99] transition-all mt-2"
+                className="w-full py-3 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-lg shadow-violet-600/20 active:scale-[0.99] transition-all mt-2 cursor-pointer"
               >
                 {loading
                   ? isSignUp
@@ -202,7 +215,7 @@ export default function AuthPage() {
                   setIsSignUp(!isSignUp);
                   setError("");
                 }}
-                className="text-violet-400 hover:text-violet-300 font-medium underline underline-offset-4 decoration-violet-500/30 hover:decoration-violet-400 transition-colors"
+                className="text-violet-400 hover:text-violet-300 font-medium underline underline-offset-4 decoration-violet-500/30 hover:decoration-violet-400 transition-colors cursor-pointer"
               >
                 {isSignUp ? "Sign in" : "Create one"}
               </button>
