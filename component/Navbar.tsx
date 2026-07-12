@@ -50,7 +50,7 @@ export default function Navbar() {
         </div>
 
         {/* Brand Text */}
-        <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-zinc-100 to-zinc-400 bg-clip-text text-transparent group-hover:from-white group-hover:to-violet-400 transition-all duration-300">
+        <span className="text-xl font-bold tracking-tight bg-linear-to-r from-zinc-100 to-zinc-400 bg-clip-text text-transparent group-hover:from-white group-hover:to-violet-400 transition-all duration-300">
           TuklasVerse
         </span>
       </Link>

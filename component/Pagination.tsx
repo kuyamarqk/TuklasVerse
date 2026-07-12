@@ -1,0 +1,67 @@
+// components/Pagination.tsx
+import Link from "next/link";
+
+type PaginationProps = {
+  currentPage: number;
+  totalPages: number;
+  basePath: string;
+};
+
+export default function Pagination({ currentPage, totalPages, basePath }: PaginationProps) {
+  // Cap visible page number boundaries dynamically so it doesn't overflow the screen
+  const startPage = Math.max(1, currentPage - 2);
+  const endPage = Math.min(totalPages, startPage + 4);
+  const adjustedStartPage = Math.max(1, Math.min(startPage, totalPages - 4));
+
+  const pageNumbers = [];
+  for (let i = adjustedStartPage; i <= endPage; i++) {
+    pageNumbers.push(i);
+  }
+
+  return (
+    <div className="flex items-center justify-center space-x-2 mt-12 select-none">
+      {/* PREVIOUS BUTTON */}
+      {currentPage > 1 ? (
+        <Link
+          href={`${basePath}?page=${currentPage - 1}`}
+          className="px-3 py-2 rounded-xl bg-white/5 border border-white/5 text-xs font-medium text-zinc-300 hover:bg-white/10 hover:text-white transition-all"
+        >
+          ← Prev
+        </Link>
+      ) : (
+        <span className="px-3 py-2 rounded-xl bg-white/1 border border-white/2 text-xs font-medium text-zinc-600 cursor-not-allowed">
+          ← Prev
+        </span>
+      )}
+
+      {/* NUMBERED PAGE CORES */}
+      {pageNumbers.map((page) => (
+        <Link
+          key={page}
+          href={`${basePath}?page=${page}`}
+          className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold transition-all ${
+            currentPage === page
+              ? "bg-violet-600 text-white shadow-lg shadow-violet-600/20 border border-violet-500/30"
+              : "bg-white/5 border border-white/5 text-zinc-400 hover:bg-white/10 hover:text-zinc-200"
+          }`}
+        >
+          {page}
+        </Link>
+      ))}
+
+      {/* NEXT BUTTON */}
+      {currentPage < totalPages ? (
+        <Link
+          href={`${basePath}?page=${currentPage + 1}`}
+          className="px-3 py-2 rounded-xl bg-white/5 border border-white/5 text-xs font-medium text-zinc-300 hover:bg-white/10 hover:text-white transition-all"
+        >
+          Next →
+        </Link>
+      ) : (
+        <span className="px-3 py-2 rounded-xl bg-white/1 border border-white/2 text-xs font-medium text-zinc-600 cursor-not-allowed">
+          Next →
+        </span>
+      )}
+    </div>
+  );
+}

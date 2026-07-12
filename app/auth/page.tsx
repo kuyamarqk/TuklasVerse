@@ -77,14 +77,14 @@ export default function AuthPage() {
         <div className="absolute inset-0 z-0">
           {/* Only render image tag when state has resolved on the client */}
           {randomBackdrop && (
-            <img
+            <Image
               src={randomBackdrop}
               alt="Cinematic Universe Backdrop"
               className="w-full h-full object-cover opacity-40 scale-100 group-hover:scale-105 transition-transform duration-10000 ease-out"
             />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f] via-transparent to-transparent opacity-90" />
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#0a0a0f]" />
+          <div className="absolute inset-0 bg-linear-to-t from-[#0a0a0f] via-transparent to-transparent opacity-90" />
+          <div className="absolute inset-0 bg-linear-to-r from-transparent via-transparent to-[#0a0a0f]" />
         </div>
         
         <div className="relative z-10 max-w-md space-y-2">
@@ -117,14 +117,14 @@ export default function AuthPage() {
                 className="object-cover w-full h-full"
               />
             </div>
-            <h1 className="text-3xl font-black tracking-tight bg-gradient-to-r from-zinc-100 via-zinc-200 to-zinc-400 bg-clip-text text-transparent mb-1">
+            <h1 className="text-3xl font-black tracking-tight bg-linear-to-r from-zinc-100 via-zinc-200 to-zinc-400 bg-clip-text text-transparent mb-1">
               TuklasVerse
             </h1>
             <p className="text-sm text-white/40">Your personal media universe</p>
           </div>
 
           {/* FORM SHELL */}
-          <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl shadow-black/40">
+          <div className="bg-white/3 backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl shadow-black/40">
             <h2 className="text-xl font-bold mb-5 tracking-tight text-white">
               {isSignUp ? "Create your account" : "Welcome back"}
             </h2>

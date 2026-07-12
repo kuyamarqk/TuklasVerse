@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import {  usePathname } from "next/navigation";
-import { Play, Server, Maximize2, Minimize2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { Play, Server, Maximize2, Minimize2, FastForward } from "lucide-react";
 import Image from "next/image";
 
 export type SeasonDetail = {
@@ -46,47 +46,85 @@ export default function VideoPlayer({
   const [isTheaterMode, setIsTheaterMode] = useState(false);
   const [activeSeasonTab, setActiveSeasonTab] = useState(season);
   const [localSeason, setLocalSeason] = useState(season);
-const [localEpisode, setLocalEpisode] = useState(episode);
+  const [localEpisode, setLocalEpisode] = useState(episode);
 
   const validSeasons = seasonsData?.filter((s) => s.season_number > 0) || [];
   const selectedSeasonData = validSeasons.find((s) => s.season_number === activeSeasonTab);
   const totalEpisodes = selectedSeasonData ? selectedSeasonData.episode_count : 24;
 
- const getVideoSrc = () => {
-  if (mediaType === "movie") {
-    switch (activeServer) {
-      case "vidsrc_pro": return `https://vidsrc.pro/embed/movie/${tmdbId}`;
-      case "vidapi": return `https://vidapi.club/embed/movie/${tmdbId}`;
-      case "smashy": return `https://embed.smashystream.xyz/playere.php?tmdb=${tmdbId}`;
-      case "ployan": return `https://ployan.me/embed/movie/${tmdbId}`;
-      case "vidsrc_cc":
-      default: return `https://vidsrc.cc/v2/embed/movie/${tmdbId}`;
+  const getVideoSrc = () => {
+    if (mediaType === "movie") {
+      switch (activeServer) {
+        case "vidsrc_pro": return `https://vidsrc.pro/embed/movie/${tmdbId}`;
+        case "vidapi": return `https://vidapi.club/embed/movie/${tmdbId}`;
+        case "smashy": return `https://embed.smashystream.xyz/playere.php?tmdb=${tmdbId}`;
+        case "ployan": return `https://ployan.me/embed/movie/${tmdbId}`;
+        case "vidsrc_cc":
+        default: return `https://vidsrc.to/embed/movie/${tmdbId}`;
+      }
+    } else {
+      switch (activeServer) {
+        case "vidsrc_pro": return `https://vidsrc.pro/embed/tv/${tmdbId}/${localSeason}/${localEpisode}`;
+        case "vidapi": return `https://vidapi.club/embed/tv/${tmdbId}/${localSeason}/${localEpisode}`;
+        case "smashy": return `https://embed.smashystream.xyz/playere.php?tmdb=${tmdbId}&season=${localSeason}&episode=${localEpisode}`;
+        case "ployan": return `https://ployan.me/embed/tv/${tmdbId}/${localSeason}/${localEpisode}`;
+        case "vidsrc_cc":
+        default: return `https://vidsrc.to/embed/tv/${tmdbId}/${localSeason}/${localEpisode}`;
+      }
     }
-  } else {
-    switch (activeServer) {
-      // ⭐ Changed from 'season'/'episode' props to 'localSeason'/'localEpisode' state values
-      case "vidsrc_pro": return `https://vidsrc.pro/embed/tv/${tmdbId}/${localSeason}/${localEpisode}`;
-      case "vidapi": return `https://vidapi.club/embed/tv/${tmdbId}/${localSeason}/${localEpisode}`;
-      case "smashy": return `https://embed.smashystream.xyz/playere.php?tmdb=${tmdbId}&season=${localSeason}&episode=${localEpisode}`;
-      case "ployan": return `https://ployan.me/embed/tv/${tmdbId}/${localSeason}/${localEpisode}`;
-      case "vidsrc_cc":
-      default: return `https://vidsrc.cc/v2/embed/tv/${tmdbId}/${localSeason}/${localEpisode}`;
+  };
+
+  const handleSelectionChange = (newSeason: number, newEpisode: number) => {
+    // 🚀 Force temporary play state reset to force mount a clean iframe structure
+    setHasClickedPlay(false); 
+    setLocalEpisode(newEpisode);
+    setLocalSeason(newSeason);
+    setActiveSeasonTab(newSeason); 
+
+    const newUrl = `${pathname}?season=${newSeason}&episode=${newEpisode}`;
+    window.history.pushState({ ...window.history.state, as: newUrl, url: newUrl }, "", newUrl);
+    
+    // Smoothly auto-start playback on selection shift
+    setTimeout(() => setHasClickedPlay(true), 50);
+  };
+
+  // ─── AUTO PLAY / ADVANCE LOGIC ──────────────────────────────────────
+  const handleNextEpisode = () => {
+    if (mediaType !== "tv") return;
+
+    const activeRunningSeasonData = validSeasons.find((s) => s.season_number === localSeason);
+    const maxEpisodesInSeason = activeRunningSeasonData ? activeRunningSeasonData.episode_count : 24;
+
+    if (localEpisode < maxEpisodesInSeason) {
+      handleSelectionChange(localSeason, localEpisode + 1);
+    } else {
+      const nextSeasonNumber = localSeason + 1;
+      const nextSeasonExists = validSeasons.some((s) => s.season_number === nextSeasonNumber);
+
+      if (nextSeasonExists) {
+        handleSelectionChange(nextSeasonNumber, 1);
+      } else {
+        alert("🎉 You have finished the final episode of the final season!");
+      }
     }
-  }
-};
+  };
 
- const handleSelectionChange = (newSeason: number, newEpisode: number) => {
-  // ⭐ Updates state inside the client browser instantaneously
-  setLocalEpisode(newEpisode);
-  setLocalSeason(newSeason);
+  // Cross-origin listening routine for providers dispatching video endings via window postMessage
+  useEffect(() => {
+    const handleVideoMessage = (event: MessageEvent) => {
+      if (typeof event.data === "string" && (event.data.includes("vidsrc_ended") || event.data.includes("video_ended"))) {
+        handleNextEpisode();
+      } else if (event.data?.event === "ended" || event.data?.type === "MEDIA_ENDED" || event.data === "ended") {
+        handleNextEpisode();
+      }
+    };
 
-  // Updates the browser navigation history bar without a heavy page reload loop
-  const newUrl = `${pathname}?season=${newSeason}&episode=${newEpisode}`;
-  window.history.pushState({ ...window.history.state, as: newUrl, url: newUrl }, "", newUrl);
-};
+    window.addEventListener("message", handleVideoMessage);
+    return () => window.removeEventListener("message", handleVideoMessage);
+  }, [localSeason, localEpisode, validSeasons]);
+  // ───────────────────────────────────────────────────────────────────
 
   return (
-    // ⭐ Dynamically handles expanding the standard max-w-5xl player shell to an ultra-wide cinematic pane
     <div className={`mx-auto px-4 sm:px-6 transition-all duration-300 ${isTheaterMode ? "max-w-none w-full p-0!" : "max-w-5xl"}`}>
       
       {/* ASPECT VIDEO WRAPPER FRAME */}
@@ -103,10 +141,10 @@ const [localEpisode, setLocalEpisode] = useState(episode);
                 className="object-cover opacity-30 blur-[2px]"
               />
             ) : (
-              <div className="absolute inset-0 bg-[#0d0d13]" />
+              <div className="absolute inset-0 bg-zinc-900" />
             )}
             
-            <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
 
             <button
               onClick={() => setHasClickedPlay(true)}
@@ -115,34 +153,37 @@ const [localEpisode, setLocalEpisode] = useState(episode);
               <Play size={32} className="fill-white translate-x-0.5" />
             </button>
             <p className="relative z-10 mt-4 font-bold text-sm sm:text-base tracking-wide text-white/90 uppercase">
-              {mediaType === "tv" ? `Play Season ${season}, Episode ${episode}` : "Click to Play Movie"}
+              {mediaType === "tv" ? `Play Season ${localSeason}, Episode ${localEpisode}` : "Click to Play Movie"}
             </p>
           </div>
         ) : (
           <iframe
-  src={getVideoSrc()}
-  className="w-full h-full bg-black overflow-hidden"
-  allowFullScreen
-  referrerPolicy="origin" // Helps hide your application paths from the third-party server logs
-/>
+            src={getVideoSrc()}
+            className="w-full h-full bg-black overflow-hidden"
+            allowFullScreen
+            referrerPolicy="origin"
+          />
         )}
       </div>
 
-      {/* SERVER SWITCHER & THEATER CONTROL BAR */}
+      {/* SERVER SWITCHER & CONTROL BAR */}
       <div className={`mt-4 p-4 bg-white/5 border border-white/5 flex flex-col md:flex-row gap-4 justify-between md:items-center ${isTheaterMode ? "mx-4 rounded-xl" : "rounded-xl"}`}>
-        <div className="flex items-center justify-between w-full md:w-auto gap-4">
+        <div className="flex flex-wrap items-center justify-between w-full md:w-auto gap-4">
           <div className="flex items-center gap-2 text-zinc-400 font-semibold text-sm">
             <Server size={16} className="text-violet-400" />
             <span>Switch Streaming Server:</span>
           </div>
           
-          <button
-            onClick={() => setIsTheaterMode(!isTheaterMode)}
-            className="md:hidden flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border border-white/10 bg-zinc-900 text-zinc-400 hover:text-white cursor-pointer"
-            title="Toggle Theater Mode"
-          >
-            {isTheaterMode ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-          </button>
+          {mediaType === "tv" && (
+            <button
+              onClick={handleNextEpisode}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-violet-600/20 text-violet-300 hover:bg-violet-600 hover:text-white border border-violet-500/30 transition-all cursor-pointer shadow-md"
+              title="Skip to Next Episode"
+            >
+              <FastForward size={14} />
+              <span>Next Episode</span>
+            </button>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-2 justify-between md:justify-end w-full md:w-auto">
@@ -150,7 +191,11 @@ const [localEpisode, setLocalEpisode] = useState(episode);
             {SERVERS.map((srv) => (
               <button
                 key={srv.id}
-                onClick={() => setActiveServer(srv.id)}
+                onClick={() => {
+                  setHasClickedPlay(false);
+                  setActiveServer(srv.id);
+                  setTimeout(() => setHasClickedPlay(true), 50);
+                }}
                 className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all cursor-pointer ${
                   activeServer === srv.id
                     ? "bg-violet-600 border-violet-500 text-white shadow-lg shadow-violet-600/20"
