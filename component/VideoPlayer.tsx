@@ -75,7 +75,6 @@ export default function VideoPlayer({
   };
 
   const handleSelectionChange = (newSeason: number, newEpisode: number) => {
-    // 🚀 Force temporary play state reset to force mount a clean iframe structure
     setHasClickedPlay(false); 
     setLocalEpisode(newEpisode);
     setLocalSeason(newSeason);
@@ -84,11 +83,9 @@ export default function VideoPlayer({
     const newUrl = `${pathname}?season=${newSeason}&episode=${newEpisode}`;
     window.history.pushState({ ...window.history.state, as: newUrl, url: newUrl }, "", newUrl);
     
-    // Smoothly auto-start playback on selection shift
     setTimeout(() => setHasClickedPlay(true), 50);
   };
 
-  // ─── AUTO PLAY / ADVANCE LOGIC ──────────────────────────────────────
   const handleNextEpisode = () => {
     if (mediaType !== "tv") return;
 
@@ -109,7 +106,6 @@ export default function VideoPlayer({
     }
   };
 
-  // Cross-origin listening routine for providers dispatching video endings via window postMessage
   useEffect(() => {
     const handleVideoMessage = (event: MessageEvent) => {
       if (typeof event.data === "string" && (event.data.includes("vidsrc_ended") || event.data.includes("video_ended"))) {
@@ -122,10 +118,10 @@ export default function VideoPlayer({
     window.addEventListener("message", handleVideoMessage);
     return () => window.removeEventListener("message", handleVideoMessage);
   }, [localSeason, localEpisode, validSeasons]);
-  // ───────────────────────────────────────────────────────────────────
 
   return (
-    <div className={`mx-auto px-4 sm:px-6 transition-all duration-300 ${isTheaterMode ? "max-w-none w-full p-0!" : "max-w-5xl"}`}>
+    /* ⭐ FIXED: Changed 'p-0!' to '!p-0' to keep compilation parser happy */
+    <div className={`mx-auto px-4 sm:px-6 transition-all duration-300 ${isTheaterMode ? "max-w-none w-full !p-0" : "max-w-5xl"}`}>
       
       {/* ASPECT VIDEO WRAPPER FRAME */}
       <div className={`relative aspect-video w-full overflow-hidden bg-zinc-950 border border-white/10 shadow-2xl transition-all duration-300 ${isTheaterMode ? "rounded-none border-x-0" : "rounded-2xl"}`}>
