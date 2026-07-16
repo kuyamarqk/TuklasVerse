@@ -10,10 +10,10 @@ type PaginationProps = {
 export default function Pagination({ currentPage, totalPages, basePath }: PaginationProps) {
   // Ensure totalPages is at least 1
   const maxPages = Math.max(1, totalPages);
-  
+
   // ✨ FIX: Calculate clean, balanced sliding page numbers
   let startPage = Math.max(1, currentPage - 2);
-  let endPage = Math.min(maxPages, startPage + 4);
+  const endPage = Math.min(maxPages, startPage + 4);
 
   if (endPage - startPage < 4) {
     startPage = Math.max(1, endPage - 4);

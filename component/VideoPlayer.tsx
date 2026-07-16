@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { Play, Server, Maximize2, Minimize2, FastForward } from "lucide-react";
 import Image from "next/image";
@@ -54,7 +54,16 @@ export default function VideoPlayer({
   // floating buttons render inside the fullscreen layer too.
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  const validSeasons = seasonsData?.filter((s) => s.season_number > 0) || [];
+  // ✨ FIX: wrapped in useMemo so this array has a stable reference across
+  // renders (only recalculated when seasonsData actually changes). Without
+  // this, .filter() created a brand-new array every render, which made
+  // handleNextEpisode's useCallback (and the effect depending on it) think
+  // its dependencies changed on every render.
+  const validSeasons = useMemo(
+    () => seasonsData?.filter((s) => s.season_number > 0) || [],
+    [seasonsData]
+  );
+
   const selectedSeasonData = validSeasons.find((s) => s.season_number === activeSeasonTab);
   const totalEpisodes = selectedSeasonData ? selectedSeasonData.episode_count : 24;
 
@@ -156,7 +165,7 @@ export default function VideoPlayer({
       {/* ASPECT VIDEO WRAPPER FRAME — also the fullscreen target */}
       <div
         ref={wrapperRef}
-        className={`relative aspect-video w-full overflow-hidden bg-zinc-950 border border-white/10 shadow-2xl transition-all duration-300 ${isTheaterMode ? "rounded-none border-x-0" : "rounded-2xl"} ${isFullscreen ? "!rounded-none !border-0" : ""}`}
+        className={`relative aspect-video w-full overflow-hidden bg-zinc-950 border border-white/10 shadow-2xl transition-all duration-300 ${isTheaterMode ? "rounded-none border-x-0" : "rounded-2xl"} ${isFullscreen ? "rounded-none! border-0!" : ""}`}
       >
         {!hasClickedPlay ? (
           <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center p-4 text-center">

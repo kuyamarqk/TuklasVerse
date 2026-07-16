@@ -14,22 +14,28 @@ export default function WatchHistoryRow() {
   const [historyItems, setHistoryItems] = useState<WatchlistItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchHistory = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return; // Guard for guests
-
-      const data = await getWatchHistory(supabase, 14); // Grab the last 14 items
-      setHistoryItems(data);
-    } catch (err) {
-      console.error("Error loading watch history:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    let ignore = false;
+
+    const fetchHistory = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return; // Guard for guests
+
+        const data = await getWatchHistory(supabase, 14); // Grab the last 14 items
+        if (!ignore) setHistoryItems(data);
+      } catch (err) {
+        console.error("Error loading watch history:", err);
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    };
+
     fetchHistory();
+
+    return () => {
+      ignore = true;
+    };
   }, [supabase]);
 
   // Optional: Function to clear a single item from watch history directly from the row
@@ -42,7 +48,7 @@ export default function WatchHistoryRow() {
         .from("watch_history")
         .delete()
         .eq("id", item.id);
-        
+
       setHistoryItems((prev) => prev.filter((i) => i.id !== item.id));
     } catch (err) {
       console.error("Failed to remove history item:", err);
@@ -75,7 +81,7 @@ export default function WatchHistoryRow() {
             >
               {/* Premium Aspect Box with the signature Violet Glow Aura & Translate Lift */}
               <div className="relative aspect-2/3 w-full rounded-xl overflow-hidden bg-white/5 border border-white/5 shadow-md group-hover:shadow-[0_0_20px_rgba(124,58,237,0.2)] group-hover:border-violet-500/30 transition-all duration-300 ease-out group-hover:scale-[1.03] group-hover:-translate-y-1.5">
-                
+
                 {/* Clear Item Cross Button Overlay */}
                 <button
                   onClick={(e) => handleClearSingle(e, item)}

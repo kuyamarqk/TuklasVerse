@@ -2,17 +2,19 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, Bookmark, Home, LogOut, LogIn } from "lucide-react";
+import { Search, Bookmark, Home, LogOut, LogIn, Menu, X } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
 import { createBrowserClient } from "@supabase/ssr";
+import type { User } from "@supabase/supabase-js";
 import Image from "next/image";
 
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  
-  const [user, setUser] = useState<any>(null);
+
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const supabase = useMemo(
     () =>
@@ -40,8 +42,17 @@ export default function Navbar() {
     return () => subscription.unsubscribe();
   }, [supabase]);
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [menuOpen]);
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
+    setMenuOpen(false);
     router.push("/auth");
     router.refresh();
   };
@@ -54,8 +65,8 @@ export default function Navbar() {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0f]/80 backdrop-blur-md border-b border-white/5">
-      <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2.5 group">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-2.5 group" onClick={() => setMenuOpen(false)}>
           <div className="relative w-7 h-7 rounded-lg overflow-hidden border border-white/10 group-hover:border-violet-500/50 transition-colors shadow-md shadow-violet-950/20">
             <Image
               src="/icon.png"
@@ -72,7 +83,8 @@ export default function Navbar() {
           </span>
         </Link>
 
-        <div className="flex items-center gap-1">
+        {/* Desktop links */}
+        <div className="hidden md:flex items-center gap-1">
           {links.map(({ href, icon: Icon, label }) => {
             const isActive = pathname === href;
             const linkClass = isActive
@@ -86,22 +98,22 @@ export default function Navbar() {
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${linkClass}`}
               >
                 <Icon size={15} />
-                <span className="hidden sm:inline">{label}</span>
+                <span>{label}</span>
               </Link>
             );
           })}
 
-          <div className="h-4 w-px bg-white/10 mx-2 hidden sm:block" />
+          <div className="h-4 w-px bg-white/10 mx-2" />
 
           {loading ? (
-            <div className="w-20 h-8 bg-white/5 animate-pulse rounded-lg hidden sm:block" />
+            <div className="w-20 h-8 bg-white/5 animate-pulse rounded-lg" />
           ) : user ? (
             <button
               onClick={handleSignOut}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-white/50 hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-200 cursor-pointer"
             >
               <LogOut size={15} />
-              <span className="hidden sm:inline">Sign out</span>
+              <span>Sign out</span>
             </button>
           ) : (
             <Link
@@ -109,6 +121,67 @@ export default function Navbar() {
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-violet-600 hover:bg-violet-500 text-white transition-all duration-200 cursor-pointer shadow-lg shadow-violet-600/20"
             >
               <LogIn size={15} />
+              <span>Sign In</span>
+            </Link>
+          )}
+        </div>
+
+        {/* Mobile hamburger button */}
+        <button
+          onClick={() => setMenuOpen((prev) => !prev)}
+          className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={menuOpen}
+        >
+          {menuOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+      </div>
+
+      {/* Mobile dropdown menu */}
+      <div
+        className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out border-t border-white/5 ${
+          menuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        <div className="px-4 py-3 flex flex-col gap-1 bg-[#0a0a0f]/95 backdrop-blur-md">
+          {links.map(({ href, icon: Icon, label }) => {
+            const isActive = pathname === href;
+            const linkClass = isActive
+              ? "bg-white/10 text-white"
+              : "text-white/60 hover:text-white hover:bg-white/5";
+
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setMenuOpen(false)}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${linkClass}`}
+              >
+                <Icon size={17} />
+                <span>{label}</span>
+              </Link>
+            );
+          })}
+
+          <div className="h-px w-full bg-white/10 my-1" />
+
+          {loading ? (
+            <div className="w-full h-10 bg-white/5 animate-pulse rounded-lg" />
+          ) : user ? (
+            <button
+              onClick={handleSignOut}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white/60 hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-200 cursor-pointer"
+            >
+              <LogOut size={17} />
+              <span>Sign out</span>
+            </button>
+          ) : (
+            <Link
+              href="/auth"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold bg-violet-600 hover:bg-violet-500 text-white transition-all duration-200 cursor-pointer shadow-lg shadow-violet-600/20"
+            >
+              <LogIn size={17} />
               <span>Sign In</span>
             </Link>
           )}
