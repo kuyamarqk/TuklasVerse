@@ -3,7 +3,7 @@
 TuklasVerse is a high-performance, cinematic movie and TV series streaming/discovery application. Built on top of **Next.js**, it blends secure server-side data extraction with an ultra-responsive, fluid single-page client interface.
 
 ## 🚀 Live Demo & Deployment
-* **Live Link:** [https://tuklasverse.netlify.app](https://tuklasverse.netlify.app) *(Update with your actual Netlify link)*
+* **Live Link:** [https://tuklas-verse.vercel.app](https://tuklas-verse.vercel.app)
 * **Build Engine:** Optimized for edge deployments on Netlify with Serverless Functions.
 
 ---
