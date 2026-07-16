@@ -4,6 +4,7 @@ import { Geist } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/component/Navbar";
 import Footer from "@/component/Footer";
+import GoogleAnalytics from '@/component/GoogleAnalytics'
  
 const geist = Geist({ subsets: ["latin"] });
  
@@ -20,6 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geist.className} bg-[#0a0a0f] text-white antialiased`}>
+        <GoogleAnalytics />
         <Navbar />
         {children}
         <Footer />
