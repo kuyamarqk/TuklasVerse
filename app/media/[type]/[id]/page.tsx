@@ -3,6 +3,7 @@ import Image from "next/image";
 import Navbar from "@/component/Navbar";
 import MediaRow from "@/component/MediaRow";
 import WatchlistButton from "@/component/WatchlistButton";
+import SupportCard from "@/component/SupportCard";
 import VideoPlayer, { SeasonDetail } from "@/component/VideoPlayer";
 import { Metadata } from "next";
 import {
@@ -140,7 +141,11 @@ export default async function MediaDetailPage({ params, searchParams }: PageProp
               {detail.tagline && <p className="text-sm text-white/40 italic mb-3">&ldquo;{detail.tagline}&rdquo;</p>}
               <p className="text-base text-white/70 leading-relaxed mb-6 max-w-2xl">{detail.overview}</p>
 
-             <WatchlistButton tmdbId={tmdbId} mediaType={mediaType} title={title} posterPath={detail.poster_path} />
+              <WatchlistButton tmdbId={tmdbId} mediaType={mediaType} title={title} posterPath={detail.poster_path} />
+
+              <div className="mt-6 max-w-2xl">
+                <SupportCard variant="banner" />
+              </div>
             </div>
           </div>
 

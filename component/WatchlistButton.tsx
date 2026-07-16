@@ -9,6 +9,7 @@ import {
   isInWatchlist,
 } from "@/lib/watchlist";
 import type { MediaType } from "@/lib/tmdb";
+import SupportCard from "./SupportCard";
 
 type Props = {
   tmdbId: number;
@@ -85,6 +86,7 @@ export default function WatchlistButton({
   };
 
   return (
+    <>
     <button
       onClick={toggle}
       disabled={loading}
@@ -106,5 +108,11 @@ export default function WatchlistButton({
         </>
       )}
     </button>
+    <div className="mt-6">
+  <SupportCard variant="banner" />
+</div>
+    </>
+    
+    
   );
 }
