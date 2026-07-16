@@ -2,8 +2,14 @@
 User-agent: *
 Allow: /
 
+# *
+User-agent: *
+Disallow: /admin
+
 # Host
 Host: https://tuklas-verse.vercel.app
 
 # Sitemaps
 Sitemap: https://tuklas-verse.vercel.app/sitemap.xml
+Sitemap: https://tuklas-verse.vercel.app/sitemap-posts.xml
+Sitemap: https://tuklas-verse.vercel.app/sitemap-pages.xml
