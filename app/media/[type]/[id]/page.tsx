@@ -1,5 +1,7 @@
+// app/media/[type]/[id]/page.tsx
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import Navbar from "@/component/Navbar";
 import MediaRow from "@/component/MediaRow";
 import WatchlistButton from "@/component/WatchlistButton";
@@ -13,6 +15,7 @@ import {
   getPosterUrl,
   getTitle,
   getYear,
+  slugifyGenre,
   MediaType,
 } from "@/lib/tmdb";
 import { Star, Clock, Tv } from "lucide-react";
@@ -85,8 +88,46 @@ export default async function MediaDetailPage({ params, searchParams }: PageProp
     (v) => v.type === "Trailer" && v.site === "YouTube"
   );
 
+  // ⭐ JSON-LD structured data for rich search results (ratings, release date, genres)
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": mediaType === "tv" ? "TVSeries" : "Movie",
+    name: title,
+    description: detail.overview || undefined,
+    image: poster || backdrop || undefined,
+    datePublished: detail.release_date || detail.first_air_date || undefined,
+    genre: detail.genres?.map((g) => g.name) || undefined,
+    ...(detail.vote_average > 0 && {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: detail.vote_average.toFixed(1),
+        bestRating: "10",
+        worstRating: "0",
+        ratingCount: detail.vote_average > 0 ? 1 : undefined,
+      },
+    }),
+    ...(mediaType === "tv" &&
+      detail.number_of_seasons && {
+        numberOfSeasons: detail.number_of_seasons,
+      }),
+    ...(mediaType === "tv" &&
+      detail.number_of_episodes && {
+        numberOfEpisodes: detail.number_of_episodes,
+      }),
+    ...(mediaType === "movie" &&
+      detail.runtime && {
+        duration: `PT${detail.runtime}M`,
+      }),
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-zinc-100">
+      {/* eslint-disable-next-line react/no-danger */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       <Navbar />
 
       <main className="pt-16 pb-12">
@@ -119,9 +160,13 @@ export default async function MediaDetailPage({ params, searchParams }: PageProp
                   {mediaType === "tv" ? "TV Series" : "Movie"}
                 </span>
                 {detail.genres?.slice(0, 3).map((g) => (
-                  <span key={g.id} className="text-xs px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-white/60">
+                  <Link
+                    key={g.id}
+                    href={`/genre/${slugifyGenre(g.name)}/${mediaType}`}
+                    className="text-xs px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/20 transition-colors"
+                  >
                     {g.name}
-                  </span>
+                  </Link>
                 ))}
               </div>
 

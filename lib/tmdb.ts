@@ -78,6 +78,11 @@ export type TMDBResponse<T> = {
   total_results: number;
 };
 
+export type Genre = {
+  id: number;
+  name: string;
+};
+
 // ⭐ UTILITY HELPER FUNCTIONS
 export function getPosterUrl(path: string | null, size = "w500") {
   if (!path) return null;
@@ -96,6 +101,16 @@ export function getTitle(media: Media) {
 export function getYear(media: Media) {
   const date = media.release_date || media.first_air_date;
   return date ? new Date(date).getFullYear() : null;
+}
+
+// Converts a genre name into a URL-friendly slug shared across movie/TV,
+// e.g. "Action & Adventure" -> "action-and-adventure", "Sci-Fi & Fantasy" -> "sci-fi-and-fantasy"
+export function slugifyGenre(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }
 
 // ⭐ DATA FETCHING METHODS
@@ -150,6 +165,34 @@ export async function searchMedia(
 ): Promise<TMDBResponse<Media & { media_type?: string }>> {
   return tmdbFetch(
     `/search/multi?query=${encodeURIComponent(query)}&page=${page}&include_adult=false`
+  );
+}
+
+export async function getGenres(type: MediaType) {
+  const data = await tmdbFetch<{ genres: Genre[] }>(`/genre/${type}/list`);
+  return data.genres;
+}
+
+export async function getGenreBySlug(type: MediaType, slug: string): Promise<Genre | null> {
+  const genres = await getGenres(type);
+  return genres.find((g) => slugifyGenre(g.name) === slug) ?? null;
+}
+
+export async function discoverByGenre(
+  type: MediaType,
+  genreId: number,
+  page = 1
+) {
+  return tmdbFetch<TMDBResponse<Media>>(
+    `/discover/${type}?with_genres=${genreId}&page=${page}&sort_by=popularity.desc`
+  );
+}
+
+// TMDB doesn't have a dedicated "anime" genre — the common convention is
+// Animation genre (id 16) combined with Japan as the origin country.
+export async function discoverAnime(type: MediaType = "tv", page = 1) {
+  return tmdbFetch<TMDBResponse<Media>>(
+    `/discover/${type}?with_genres=16&with_origin_country=JP&page=${page}&sort_by=popularity.desc`
   );
 }
 

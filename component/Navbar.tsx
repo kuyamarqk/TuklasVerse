@@ -1,8 +1,9 @@
+// component/Navbar.tsx
 "use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, Bookmark, Home, LogOut, LogIn, Menu, X } from "lucide-react";
+import { Search, Bookmark, Home, LogOut, LogIn, Menu, X, Flame, LayoutGrid } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import type { User } from "@supabase/supabase-js";
@@ -59,7 +60,7 @@ export default function Navbar() {
 
   const links = [
     { href: "/", icon: Home, label: "Home" },
-    { href: "/search", icon: Search, label: "Search" },
+    
     { href: "/watchlist", icon: Bookmark, label: "My List" },
   ];
 
@@ -86,7 +87,7 @@ export default function Navbar() {
         {/* Desktop links */}
         <div className="hidden md:flex items-center gap-1">
           {links.map(({ href, icon: Icon, label }) => {
-            const isActive = pathname === href;
+            const isActive = pathname === href.split("#")[0];
             const linkClass = isActive
               ? "bg-white/10 text-white"
               : "text-white/50 hover:text-white hover:bg-white/5";
@@ -102,6 +103,18 @@ export default function Navbar() {
               </Link>
             );
           })}
+
+          <Link
+            href="/search"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+              pathname === "/search"
+                ? "bg-white/10 text-white"
+                : "text-white/50 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <Search size={15} />
+            <span>Search</span>
+          </Link>
 
           <div className="h-4 w-px bg-white/10 mx-2" />
 
@@ -126,15 +139,26 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile hamburger button */}
-        <button
-          onClick={() => setMenuOpen((prev) => !prev)}
-          className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
-          aria-label={menuOpen ? "Close menu" : "Open menu"}
-          aria-expanded={menuOpen}
-        >
-          {menuOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
+        {/* Mobile controls: Search stays visible, hamburger holds the rest */}
+        <div className="md:hidden flex items-center gap-1">
+          <Link
+            href="/search"
+            onClick={() => setMenuOpen(false)}
+            className="flex items-center justify-center w-9 h-9 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+            aria-label="Search"
+          >
+            <Search size={19} />
+          </Link>
+
+          <button
+            onClick={() => setMenuOpen((prev) => !prev)}
+            className="flex items-center justify-center w-9 h-9 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+          >
+            {menuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile dropdown menu */}
@@ -145,7 +169,7 @@ export default function Navbar() {
       >
         <div className="px-4 py-3 flex flex-col gap-1 bg-[#0a0a0f]/95 backdrop-blur-md">
           {links.map(({ href, icon: Icon, label }) => {
-            const isActive = pathname === href;
+            const isActive = pathname === href.split("#")[0];
             const linkClass = isActive
               ? "bg-white/10 text-white"
               : "text-white/60 hover:text-white hover:bg-white/5";

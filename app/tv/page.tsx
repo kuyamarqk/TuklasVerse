@@ -1,7 +1,7 @@
 // app/tv/page.tsx
-import Link from "next/link";
 import MediaCard from "@/component/MediaCard";
 import Pagination from "@/component/Pagination";
+import Breadcrumbs from "@/component/Breadcrumbs";
 import { getPopularTV, Media } from "@/lib/tmdb";
 
 type PageProps = {
@@ -43,16 +43,16 @@ export default async function TVCatalogPage({ searchParams }: PageProps) {
   const tvRows = chunkTVShows(tvShows, 5);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-zinc-100 px-6 py-10 selection:bg-violet-500/30">
+    <div className="min-h-screen bg-[#0a0a0f] text-zinc-100 px-6 pt-28 pb-10 selection:bg-violet-500/30">
       
       {/* HEADER BREADCRUMB */}
-      <div className="max-w-7xl mx-auto mb-6">
-        <Link 
-          href="/" 
-          className="text-xs font-bold text-zinc-500 hover:text-violet-400 transition-colors uppercase tracking-widest no-underline"
-        >
-          ← Back to Explorer
-        </Link>
+      <div className="max-w-7xl mx-auto">
+        <Breadcrumbs
+          items={[
+            { label: "Home", href: "/" },
+            { label: "TV Series" },
+          ]}
+        />
       </div>
 
       {/* INTERFACE CATALOGUE TITLE */}
