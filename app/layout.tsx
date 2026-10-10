@@ -20,7 +20,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <meta name="google-site-verification" content="lydAmxF8T7r4M7VCZIf9zimI6RKJy2IioD9e-Qgq70U" />
+      <meta name="google-site-verification" content="81yQt2G2UKUlw-X8z3FajeDrG7ekgiQfPkoaGuRr1Xg" />
       <body className={`${geist.className} bg-[#0a0a0f] text-white antialiased`}>
         <GoogleAnalytics />
         <Navbar />
