@@ -20,10 +20,8 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
     return `${basePath}?${params.toString()}`;
   };
 
-  // Ensure totalPages is at least 1
   const maxPages = Math.max(1, totalPages);
 
-  // Calculate clean, balanced sliding page numbers
   let startPage = Math.max(1, currentPage - 2);
   const endPage = Math.min(maxPages, startPage + 4);
 
