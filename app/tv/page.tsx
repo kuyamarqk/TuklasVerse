@@ -2,25 +2,43 @@
 import MediaCard from "@/component/MediaCard";
 import Pagination from "@/component/Pagination";
 import Breadcrumbs from "@/component/Breadcrumbs";
-import { getPopularTV, Media } from "@/lib/tmdb";
+import MediaFilters from "@/component/MediaFilters";
+import { 
+  getPopularTV, 
+  getTopRatedTV, 
+  getOnTheAirTV, 
+  discoverTVByCountry, 
+  Media 
+} from "@/lib/tmdb";
 
 type PageProps = {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; category?: string; country?: string }>;
 };
 
 export default async function TVCatalogPage({ searchParams }: PageProps) {
-  // Extract and parse page numbers safely from Server runtime
+  // Extract and parse query parameters safely from the Server runtime
   const resolvedParams = await searchParams;
   const currentPage = Number(resolvedParams.page) || 1;
+  const currentCategory = resolvedParams.category || "popular";
+  const currentCountry = resolvedParams.country || "";
   
   let tvShows: Media[] = []; 
   let totalPages = 500; // TMDB enforces a hard limit cap of 500 pages max for list distributions
   let errorMessage = "";
 
   try {
-    /* 🍿 FIXED: Hooked into your native getPopularTV library helper 
-       and forwarded the requested page index seamlessly. */
-    const response = await getPopularTV(currentPage);
+    let response;
+
+    // Dynamically pick the right TV fetch engine based on filter options
+    if (currentCountry) {
+      response = await discoverTVByCountry(currentCountry, currentPage);
+    } else if (currentCategory === "top_rated") {
+      response = await getTopRatedTV(currentPage);
+    } else if (currentCategory === "latest") {
+      response = await getOnTheAirTV(currentPage);
+    } else {
+      response = await getPopularTV(currentPage);
+    }
     
     tvShows = response?.results || [];
     if (response?.total_pages) {
@@ -31,7 +49,7 @@ export default async function TVCatalogPage({ searchParams }: PageProps) {
     errorMessage = "Could not sync collection metrics from TMDB pipelines.";
   }
 
-  // Helper function to chunk the array into groups of exactly 5
+  // Helper function to chunk array into groups of 5 for uniform layout rows
   const chunkTVShows = (array: Media[], size: number) => {
     const chunked: Media[][] = [];
     for (let i = 0; i < array.length; i += size) {
@@ -55,7 +73,7 @@ export default async function TVCatalogPage({ searchParams }: PageProps) {
         />
       </div>
 
-      {/* INTERFACE CATALOGUE TITLE */}
+      {/* INTERFACE CATALOGUE TITLE & FILTERS */}
       <header className="max-w-7xl mx-auto mb-10 border-b border-white/5 pb-6">
         <h1 className="text-2xl sm:text-4xl font-black tracking-tight bg-linear-to-r from-zinc-100 to-zinc-400 bg-clip-text text-transparent">
           Explore TV Shows
@@ -63,6 +81,9 @@ export default async function TVCatalogPage({ searchParams }: PageProps) {
         <p className="text-xs text-zinc-500 mt-1 uppercase tracking-wider font-semibold">
           Live TMDB Collection Network • Page {currentPage}
         </p>
+
+        {/* Shared Unified Media Filters Component */}
+        <MediaFilters basePath="/tv" type="tv" />
       </header>
 
       {/* RESPONSIVE RENDERING ENGINE GRID */}
@@ -74,25 +95,18 @@ export default async function TVCatalogPage({ searchParams }: PageProps) {
         )}
 
         {tvShows.length === 0 && !errorMessage ? (
-          <div className="text-center py-20 text-xs text-zinc-500">
-            No media matches extracted from target servers.
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {tvRows.map((row, rowIndex) => (
-              <div 
-                key={rowIndex} 
-                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4"
-              >
-                {row.map((item) => (
-                  <div key={item.id} className="flex flex-col">
-                    <MediaCard media={item} mediaType="tv" />
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        )}
+  <div className="text-center py-20 text-xs text-zinc-500">
+    No media matches extracted from target servers.
+  </div>
+) : (
+  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+    {tvShows.map((item) => (
+      <div key={item.id} className="flex flex-col">
+        <MediaCard media={item} mediaType="tv" />
+      </div>
+    ))}
+  </div>
+)}
 
         {/* PAGINATION INTERACTIVE CONTROL STRIP */}
         {!errorMessage && tvShows.length > 0 && (

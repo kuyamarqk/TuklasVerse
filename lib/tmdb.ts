@@ -201,3 +201,28 @@ export type SearchMediaType = "movie" | "tv" | "person";
 export type SearchResult = Media & {
   media_type?: SearchMediaType;
 };
+
+
+
+export async function getNowPlayingMovies(page = 1) {
+  return tmdbFetch<TMDBResponse<Media>>(
+    `/movie/now_playing?page=${page}`
+  );
+}
+
+export async function discoverMoviesByCountry(countryCode: string, page = 1) {
+  return tmdbFetch<TMDBResponse<Media>>(
+    `/discover/movie?with_origin_country=${countryCode}&page=${page}&sort_by=popularity.desc`
+  );
+}
+
+
+export async function getOnTheAirTV(page = 1) {
+  return tmdbFetch<TMDBResponse<Media>>(`/tv/on_the_air?page=${page}`);
+}
+
+export async function discoverTVByCountry(countryCode: string, page = 1) {
+  return tmdbFetch<TMDBResponse<Media>>(
+    `/discover/tv?with_origin_country=${countryCode}&page=${page}&sort_by=popularity.desc`
+  );
+}
