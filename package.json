@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && opennextjs-cloudflare build",
     "start": "next start",
     "next-sitemap": "next-sitemap",
     "lint": "eslint"
@@ -13,7 +13,7 @@
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.0",
     "lucide-react": "^1.16.0",
-    "next": "16.2.6",
+    "next": "16.4.0",
     "next-sitemap": "^4.2.3",
     "react": "19.2.4",
     "react-dom": "19.2.4"
@@ -24,7 +24,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.2.6",
+    "eslint-config-next": "16.4.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
