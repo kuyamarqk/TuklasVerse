@@ -1,5 +1,8 @@
 // components/Pagination.tsx
+"use client";
+
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 type PaginationProps = {
   currentPage: number;
@@ -8,10 +11,19 @@ type PaginationProps = {
 };
 
 export default function Pagination({ currentPage, totalPages, basePath }: PaginationProps) {
+  const searchParams = useSearchParams();
+
+  // Helper function to build page URLs while preserving active category & country filters
+  const createPageUrl = (pageNumber: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", pageNumber.toString());
+    return `${basePath}?${params.toString()}`;
+  };
+
   // Ensure totalPages is at least 1
   const maxPages = Math.max(1, totalPages);
 
-  // ✨ FIX: Calculate clean, balanced sliding page numbers
+  // Calculate clean, balanced sliding page numbers
   let startPage = Math.max(1, currentPage - 2);
   const endPage = Math.min(maxPages, startPage + 4);
 
@@ -29,7 +41,7 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
       {/* PREVIOUS BUTTON */}
       {currentPage > 1 ? (
         <Link
-          href={`${basePath}?page=${currentPage - 1}`}
+          href={createPageUrl(currentPage - 1)}
           className="px-3 py-2 rounded-xl bg-white/5 border border-white/5 text-xs font-medium text-zinc-300 hover:bg-white/10 hover:text-white transition-all"
         >
           ← Prev
@@ -44,7 +56,7 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
       {pageNumbers.map((page) => (
         <Link
           key={page}
-          href={`${basePath}?page=${page}`}
+          href={createPageUrl(page)}
           className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold transition-all ${
             currentPage === page
               ? "bg-violet-600 text-white shadow-lg shadow-violet-600/20 border border-violet-500/30"
@@ -58,7 +70,7 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
       {/* NEXT BUTTON */}
       {currentPage < maxPages ? (
         <Link
-          href={`${basePath}?page=${currentPage + 1}`}
+          href={createPageUrl(currentPage + 1)}
           className="px-3 py-2 rounded-xl bg-white/5 border border-white/5 text-xs font-medium text-zinc-300 hover:bg-white/10 hover:text-white transition-all"
         >
           Next →
